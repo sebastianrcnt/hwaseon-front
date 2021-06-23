@@ -1,8 +1,5 @@
 <template>
   <MainLayout>
-    <div class="header">
-      <h1 class="logo">HWASEON</h1>
-    </div>
     <a-menu
       mode="horizontal"
       :defaultSelectedKeys="['1']"
@@ -203,28 +200,5 @@ export default {
 <style lang="scss">
 * {
   box-sizing: border-box;
-}
-
-.header {
-  width: 100vw;
-  height: 55px;
-  border-bottom: 1px solid #ddd;
-
-  background-color: white;
-  z-index: 100;
-
-  position: sticky;
-  top: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  .logo {
-    all: unset;
-    font-size: 30px;
-    font-weight: bold;
-    color: #ff6633;
-    text-align: center;
-  }
 }
 </style>
