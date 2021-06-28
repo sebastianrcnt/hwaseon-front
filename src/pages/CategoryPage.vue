@@ -1,33 +1,14 @@
 <template>
   <MainLayout>
-    <a-menu
-      mode="horizontal"
-      :defaultSelectedKeys="['1']"
-      v-model="current"
-      style="display: flex; justify-content: center;"
-    >
-      <a-menu-item key="1">
-        키워드 분석/카테고리 현황
-      </a-menu-item>
-      <a-menu-item key="2">
-        제품트래킹/키워드별 예상 판매량
-      </a-menu-item>
-      <a-menu-item key="3">
-        대량키워드 요약
-      </a-menu-item>
-      <a-menu-item key="4">
-        블로그 노출 확인
-      </a-menu-item>
-    </a-menu>
-    <div style="padding: 20px;">
-      <a-row style="margin-bottom: 20px;">
+    <div class="container" style="padding: 20px;">
+      <a-row>
         <a-input-search
           size="large"
           placeholder="검색어 입력"
           enter-button
         ></a-input-search>
       </a-row>
-      <a-row :gutter="10" type="flex" style="margin-bottom: 20px;">
+      <a-row :gutter="10" type="flex">
         <a-col :span="12">
           <a-row style="margin-bottom: 10px;">
             <a-card title="월간 검색수">
@@ -129,7 +110,37 @@
           >
         </a-row>
       </a-card>
-      <a-table :columns="columns" :data-source="dataSource"> </a-table>
+      <a-card>
+        <a-row style="margin-bottom: 16px;">
+          <a-input-group compact>
+            <a-input style="width: 20%" placeholder="스토어명"></a-input>
+            <a-input-search
+              style="width: 30%"
+              placeholder="키워드"
+              enter-button="검색하기"
+            >
+            </a-input-search>
+          </a-input-group>
+        </a-row>
+        <a-row>
+          <a-table :columns="columns" :data-source="dataSource"> </a-table>
+        </a-row>
+      </a-card>
+      <a-card title="키워드별 예상 판매( NPay 기준 | 최근 7일간)">
+        <a-row style="margin-bottom: 16px;">
+          <a-input-group compact>
+            <a-input-search
+              style="width: 30%"
+              placeholder="키워드 (ex) 탈모샴푸"
+              enter-button="검색하기"
+            >
+            </a-input-search>
+          </a-input-group>
+        </a-row>
+        <a-row>
+          <a-table :columns="columns" :data-source="dataSource"> </a-table>
+        </a-row>
+      </a-card>
     </div>
   </MainLayout>
 </template>
@@ -200,5 +211,9 @@ export default {
 <style lang="scss">
 * {
   box-sizing: border-box;
+}
+
+.container > * {
+  margin-bottom: 20px !important;
 }
 </style>
