@@ -1,6 +1,6 @@
 <template>
   <div id="root">
-      <slot></slot>
+    <slot></slot>
   </div>
 </template>
 
@@ -11,8 +11,16 @@ export default {
 };
 </script>
 
-<style>
-* {
-  box-sizing: border-box;
+<style scoped>
+#root {
+  width: 100%;
+  min-width: 800px;
+  max-width: 1600px;
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 </style>

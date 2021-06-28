@@ -1,34 +1,31 @@
 <template>
   <HomeLayout>
-    <div class="home-container">
-      <h1 class="home-logo">HWASEON</h1>
-      <div class="search-input-container">
-        <a-input-search
-          type="text"
-          class="search-input"
-          placeholder="검색어를 입력하세요"
-          size="large"
-          enter-button
-        ></a-input-search>
-      </div>
-
-      <ul class="features">
-        <a-space size="large">
-          <router-link class="feature" to="/features/category">
-            키워드 분석/카테고리 현황
-          </router-link>
-          <router-link class="feature" to="/features/tracking">
-            제품트래킹/키워드별 예상 판매량
-          </router-link>
-          <router-link class="feature" to="/features/summary">
-            대량키워드 요약
-          </router-link>
-          <router-link class="feature" to="/features/blog">
-            블로그 노출 확인
-          </router-link>
-        </a-space>
-      </ul>
+    <h1 class="home-logo">HWASEON</h1>
+    <div class="search-input-container">
+      <a-input-search
+        type="text"
+        class="search-input"
+        placeholder="검색어를 입력하세요"
+        size="large"
+        enter-button
+      ></a-input-search>
     </div>
+    <ul class="features">
+      <a-space size="large">
+        <router-link class="feature" to="/features/category">
+          키워드 분석/카테고리 현황
+        </router-link>
+        <router-link class="feature" to="/features/tracking">
+          제품트래킹/키워드별 예상 판매량
+        </router-link>
+        <router-link class="feature" to="/features/summary">
+          대량키워드 요약
+        </router-link>
+        <router-link class="feature" to="/features/blog">
+          블로그 노출 확인
+        </router-link>
+      </a-space>
+    </ul>
   </HomeLayout>
 </template>
 
@@ -48,16 +45,6 @@ export default {
 </script>
 
 <style lang="scss">
-.home-container {
-  width: 100vw;
-  height: 100vh;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
 .home-logo {
   text-align: center;
   font-size: 80px;
@@ -70,7 +57,8 @@ export default {
 }
 
 .search-input-container {
-  width: 60vw;
+  width: 100vw;
+  max-width: 600px;
   margin-bottom: 30px;
 }
 
