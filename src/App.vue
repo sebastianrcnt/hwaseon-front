@@ -21,4 +21,12 @@ export default {
 .ant-card:hover {
   transform: scale(1.01);
 }
+
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 </style>
