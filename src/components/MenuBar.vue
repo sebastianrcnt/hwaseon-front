@@ -1,9 +1,8 @@
 <template>
   <a-menu
     mode="horizontal"
-    :defaultSelectedKeys="[1]"
-    v-model="current"
     style="display: flex; justify-content: center;"
+    v-model="current"
     @select="handleMenuSelect"
   >
     <a-menu-item key="/features/category">
@@ -25,16 +24,19 @@
 export default {
   data() {
     return {
-      current: "1",
+      current: [],
     };
   },
-
   methods: {
     handleMenuSelect({ item, key, keyPath }) {
       console.log({ item, key, keyPath });
       this.$router.push(key);
     },
   },
+  mounted() {
+    console.log(this.$route)
+    this.current = [this.$route.path]
+  }
 };
 </script>
 
