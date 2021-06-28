@@ -110,6 +110,73 @@
           >
         </a-row>
       </a-card>
+      <!-- Search Results -->
+      <a-card title="검색 결과">
+        <a-table></a-table>
+      </a-card>
+      <!-- Category Keywords -->
+      <a-card title="카테고리별 인기검색어">
+        <a-row style="margin-bottom: 16px;">
+          <a-select
+            default-value="all"
+            style="width: 120px"
+            @change="handleChange"
+          >
+            <a-select-option value="all">
+              전체 (1분류)
+            </a-select-option>
+          </a-select>
+          <a-select
+            default-value="all"
+            style="width: 120px"
+            @change="handleChange"
+          >
+            <a-select-option value="all">
+              전체 (2분류)
+            </a-select-option>
+          </a-select>
+          <a-select
+            default-value="all"
+            style="width: 120px"
+            @change="handleChange"
+          >
+            <a-select-option value="all">
+              전체 (3분류)
+            </a-select-option>
+          </a-select>
+          <a-select
+            default-value="all"
+            style="width: 120px"
+            @change="handleChange"
+          >
+            <a-select-option value="all">
+              전체 (4분류)
+            </a-select-option>
+          </a-select>
+          <a-button type="primary">
+            검색하기
+          </a-button>
+        </a-row>
+        <a-row>
+          <a-table :columns="columns" :data-source="dataSource"> </a-table>
+        </a-row>
+      </a-card>
+      <a-card title="해당 키워드 N쇼핑 판매량(NPay 기준 | 최근 7일간)">
+        <a-row style="margin-bottom: 16px;">
+          <a-input-group compact>
+            <a-input-search
+              style="width: 30%"
+              placeholder="키워드 (ex) 탈모샴푸"
+              enter-button="검색하기"
+            >
+            </a-input-search>
+          </a-input-group>
+        </a-row>
+        <a-row>
+          <a-table :columns="columns" :data-source="dataSource"> </a-table>
+        </a-row>
+      </a-card>
+      <!-- RESULT -->
       <a-card>
         <a-row style="margin-bottom: 16px;">
           <a-input-group compact>
@@ -126,6 +193,7 @@
           <a-table :columns="columns" :data-source="dataSource"> </a-table>
         </a-row>
       </a-card>
+      <!-- Another -->
       <a-card title="키워드별 예상 판매( NPay 기준 | 최근 7일간)">
         <a-row style="margin-bottom: 16px;">
           <a-input-group compact>
