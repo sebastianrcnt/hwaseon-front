@@ -1,6 +1,5 @@
 <template>
   <MainLayout>
-    <div class="container" style="padding: 20px;">
       <a-row>
         <a-input-search
           size="large"
@@ -209,7 +208,6 @@
           <a-table :columns="columns" :data-source="dataSource"> </a-table>
         </a-row>
       </a-card>
-    </div>
   </MainLayout>
 </template>
 
@@ -275,13 +273,3 @@ export default {
   },
 };
 </script>
-
-<style lang="scss">
-* {
-  box-sizing: border-box;
-}
-
-.container > * {
-  margin-bottom: 20px !important;
-}
-</style>

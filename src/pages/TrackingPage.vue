@@ -91,9 +91,6 @@
 <script>
 import MainLayout from "../layouts/MainLayout.vue";
 
-// const columns = [{ title: "Name", dataIndex: "name" }];
-// const dataSource = [{ key: 1, name: "Sebastian Jeong" }];
-
 export default {
   name: "TrackingPage",
   components: {
@@ -104,48 +101,7 @@ export default {
       current: ["1"],
     };
   },
-  mounted() {
-    this.fillData();
-  },
-  methods: {
-    onChartTypeChange(event) {
-      this.chartType = event.target.value;
-    },
-    onChartPeriodChange(event) {
-      this.chartPeriod = event.target.value;
-    },
-    getRandomInt() {
-      return Math.floor(Math.random() * (50 - 5 + 1)) + 5;
-    },
-    fillData() {
-      this.chartData = {
-        labels: [1, 2, 3, 4, 5],
-        datasets: [
-          {
-            label: "Data One",
-            fill: false,
-            tension: 0.1,
-            data: [
-              this.getRandomInt(),
-              this.getRandomInt(),
-              this.getRandomInt(),
-              this.getRandomInt(),
-              this.getRandomInt(),
-            ],
-          },
-        ],
-      };
-    },
-  },
+  mounted() {},
+  methods: {},
 };
 </script>
-
-<style lang="scss">
-* {
-  box-sizing: border-box;
-}
-
-.container > * {
-  margin-bottom: 20px !important;
-}
-</style>

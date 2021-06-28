@@ -1,18 +1,23 @@
 <template>
   <div class="header">
-    <h1 class="logo">HWASEON</h1>
+    <h1 class="logo" @click="handleLogoClick">HWASEON</h1>
   </div>
 </template>
 
 <script>
 export default {
   name: "TopBar",
+  methods: {
+    handleLogoClick() {
+      this.$router.push("/");
+    },
+  },
 };
 </script>
 
 <style lang="scss">
 .header {
-  width: 100vw;
+  width: 100%;
   height: 55px;
   border-bottom: 1px solid #ddd;
 
@@ -24,8 +29,6 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-
-
 }
 
 .logo {
@@ -34,5 +37,6 @@ export default {
   font-weight: bold;
   color: #ff6633;
   text-align: center;
+  cursor: pointer;
 }
 </style>

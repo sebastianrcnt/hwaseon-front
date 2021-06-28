@@ -1,33 +1,31 @@
 <template>
   <MainLayout>
-    <div class="container" style="padding: 20px;">
-      <a-row gutter="16" type="flex" align="middle" style="width: 100%;">
-        <a-card style="width: 100%;">
-          <a-row align="middle" type="flex" style="margin-bottom: 16px;">
-            <a-col span="6">
-              블로그 ID
-            </a-col>
-            <a-col span="18">
-              <a-input
-                style="width: 100%;"
-                placeholder="ex) dotoree0103"
-              ></a-input>
-            </a-col>
-          </a-row>
-          <a-row align="middle" type="flex" justify="end">
-            <a-space>
-              <a-button>키워드 자동 생성</a-button>
-              <a-button>View 순위 확인</a-button>
-              <a-button type="primary">검색하기</a-button>
-            </a-space>
-          </a-row>
-        </a-card>
-      </a-row>
-      <!-- Search Results -->
-      <a-card title="검색 결과">
-        <a-table></a-table>
+    <a-row gutter="16" type="flex" align="middle" style="width: 100%;">
+      <a-card style="width: 100%;">
+        <a-row align="middle" type="flex" style="margin-bottom: 16px;">
+          <a-col span="6">
+            블로그 ID
+          </a-col>
+          <a-col span="18">
+            <a-input
+              style="width: 100%;"
+              placeholder="ex) dotoree0103"
+            ></a-input>
+          </a-col>
+        </a-row>
+        <a-row align="middle" type="flex" justify="end">
+          <a-space>
+            <a-button>키워드 자동 생성</a-button>
+            <a-button>View 순위 확인</a-button>
+            <a-button type="primary">검색하기</a-button>
+          </a-space>
+        </a-row>
       </a-card>
-    </div>
+    </a-row>
+    <!-- Search Results -->
+    <a-card title="검색 결과">
+      <a-table></a-table>
+    </a-card>
   </MainLayout>
 </template>
 
@@ -77,13 +75,3 @@ export default {
   },
 };
 </script>
-
-<style lang="scss">
-* {
-  box-sizing: border-box;
-}
-
-.container > * {
-  margin-bottom: 20px !important;
-}
-</style>

@@ -1,8 +1,10 @@
 <template>
-  <div>
+  <div id="root">
     <TopBar></TopBar>
     <MenuBar></MenuBar>
-    <slot></slot>
+    <div class="container">
+      <slot></slot>
+    </div>
   </div>
 </template>
 
@@ -19,4 +21,47 @@ export default {
 };
 </script>
 
-<style></style>
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#root {
+  min-width: 800px;
+  width: 100vw;
+  max-width: 1200px;
+  height: 100vh;
+  padding: 0 20px;
+  overflow-y: scroll;
+  box-shadow: 0px 0px 15px 4px rgba(0, 0, 0, 0.1);
+}
+
+#root::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+#root {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  height: 100%;
+  width: 100%;
+}
+
+.container > * {
+  margin-bottom: 20px !important;
+  width: 100%;
+}
+</style>
