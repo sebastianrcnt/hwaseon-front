@@ -24,3 +24,13 @@ export const getRelKeywordsStatistics = (keyword, month) =>
   ApiClient.get("api/v1/keyword-services/relkeyword-search-statistics", {
     params: { keyword, month },
   }).then(extractData);
+
+export const getRelativeRatio = (keywords, startDate, endDate) =>
+  ApiClient.get("api/v1/keyword-services/relative", {
+    params: { keywords, startDate, endDate },
+  }).then(extractData);
+
+export const getNaverCategory = (categoryId) =>
+  ApiClient.get("api/v1/proxy-services/get-search-category", {
+    params: { categoryId },
+  }).then(extractData);

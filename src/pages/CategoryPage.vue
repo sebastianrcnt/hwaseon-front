@@ -26,12 +26,16 @@
                   />
                 </a-col>
                 <a-col :span="6">
-                  <a-statistic title="Total" value="1128" suffix="건" />
+                  <a-statistic
+                    title="Total"
+                    :value="totalSearchCount"
+                    suffix="건"
+                  />
                 </a-col>
                 <a-col :span="6">
                   <a-statistic
                     title="전월대비"
-                    value="1128"
+                    :value="searchCountDeltaInPercentage"
                     suffix="%"
                     :precision="2"
                   />
@@ -68,7 +72,7 @@
                 <a-col :span="6">
                   <a-statistic
                     title="전월대비"
-                    :value="publishCountDelta"
+                    :value="publishCountDeltaInPercentage"
                     :precision="2"
                     suffix="%"
                   />
@@ -154,39 +158,71 @@
     <a-card title="카테고리별 인기검색어">
       <a-row style="margin-bottom: 16px;">
         <a-select
-          default-value="all"
-          style="width: 120px"
-          @change="handleChange"
+          class="category-select"
+          default-value="unset"
+          @change="handleCategoryChange(0, $event)"
+          :value="selectedCategoriesByLevel[0]"
         >
-          <a-select-option value="all">
+          <a-select-option value="unset">
             전체 (1분류)
           </a-select-option>
+          <a-select-option
+            v-for="(option, index) in categoryOptionsByLevel[0]"
+            :key="index"
+            :value="option.cid"
+          >
+            {{ option.name }}
+          </a-select-option>
         </a-select>
         <a-select
-          default-value="all"
-          style="width: 120px"
-          @change="handleChange"
+          class="category-select"
+          default-value="unset"
+          @change="handleCategoryChange(1, $event)"
+          :value="selectedCategoriesByLevel[1]"
         >
-          <a-select-option value="all">
+          <a-select-option value="unset">
             전체 (2분류)
           </a-select-option>
-        </a-select>
-        <a-select
-          default-value="all"
-          style="width: 120px"
-          @change="handleChange"
-        >
-          <a-select-option value="all">
-            전체 (3분류)
+          <a-select-option
+            v-for="(option, index) in categoryOptionsByLevel[1]"
+            :key="index"
+            :value="option.cid"
+          >
+            {{ option.name }}
           </a-select-option>
         </a-select>
         <a-select
-          default-value="all"
-          style="width: 120px"
-          @change="handleChange"
+          class="category-select"
+          default-value="unset"
+          @change="handleCategoryChange(2, $event)"
+          :value="selectedCategoriesByLevel[2]"
         >
-          <a-select-option value="all">
+          <a-select-option value="unset">
+            전체 (3분류)
+          </a-select-option>
+          <a-select-option
+            v-for="(option, index) in categoryOptionsByLevel[2]"
+            :key="index"
+            :value="option.cid"
+          >
+            {{ option.name }}
+          </a-select-option>
+        </a-select>
+        <a-select
+          class="category-select"
+          default-value="unset"
+          @change="handleCategoryChange(3, $event)"
+          :value="selectedCategoriesByLevel[3]"
+        >
+          <a-select-option value="unset">
             전체 (4분류)
+          </a-select-option>
+          <a-select-option
+            v-for="(option, index) in categoryOptionsByLevel[3]"
+            :key="index"
+            :value="option.cid"
+          >
+            {{ option.name }}
           </a-select-option>
         </a-select>
         <a-button type="primary">
@@ -213,38 +249,6 @@
       </a-row>
     </a-card>
     <!-- RESULT -->
-    <a-card>
-      <a-row style="margin-bottom: 16px;">
-        <a-input-group compact>
-          <a-input style="width: 20%" placeholder="스토어명"></a-input>
-          <a-input-search
-            style="width: 30%"
-            placeholder="키워드"
-            enter-button="검색하기"
-          >
-          </a-input-search>
-        </a-input-group>
-      </a-row>
-      <a-row>
-        <a-table :columns="columns" :data-source="dataSource"> </a-table>
-      </a-row>
-    </a-card>
-    <!-- Another -->
-    <a-card title="키워드별 예상 판매( NPay 기준 | 최근 7일간)">
-      <a-row style="margin-bottom: 16px;">
-        <a-input-group compact>
-          <a-input-search
-            style="width: 30%"
-            placeholder="키워드 (ex) 탈모샴푸"
-            enter-button="검색하기"
-          >
-          </a-input-search>
-        </a-input-group>
-      </a-row>
-      <a-row>
-        <a-table :columns="columns" :data-source="dataSource"> </a-table>
-      </a-row>
-    </a-card>
   </MainLayout>
 </template>
 
@@ -252,7 +256,9 @@
 import MainLayout from "../layouts/MainLayout.vue";
 import LineChart from "../components/LineChart";
 import {
+  getNaverCategory,
   getPublishCount,
+  getRelativeRatio,
   getRelKeywordsStatistics,
   getSearchSectionOrder,
 } from "../fetchers";
@@ -271,6 +277,7 @@ export default {
     return {
       current: ["1"],
       chartData: null,
+      depth: 0,
       chartOptions: {
         responsive: true,
         maintainAspectRatio: false,
@@ -284,11 +291,9 @@ export default {
       // relKeywordStatistics
       relKeywordStatistics: null,
       relKeywordStatisticsReady: true,
-      // searchCount
-      // pcSearchCount: 0,
-      // mobileSearchCount: 0,
-      // lastPCSearchCount: 0,
-      // lastMobileSearchCount: 0,
+      // relative ratio
+      totalSearchCountRelativeRatio: 0,
+      totalSearchCountRelativeRatioReady: true,
       // publishCount
       lastBlogPublishCount: 0,
       lastCafePublishCount: 0,
@@ -299,10 +304,16 @@ export default {
       pcSectionOrder: [],
       mobileSectionOrder: [],
       sectionOrderReady: true,
+      // categories
+      categoryOptionsByLevel: [[], [], [], []],
+      selectedCategoriesByLevel: ["unset", "unset", "unset", "unset"],
     };
   },
-  mounted() {
+  async mounted() {
     this.fillData();
+    // get all categories
+    const topCategories = await getNaverCategory(0);
+    this.$set(this.categoryOptionsByLevel, 0, topCategories.childList);
   },
   computed: {
     pcSearchCount() {
@@ -312,24 +323,26 @@ export default {
       return this.relKeywordStatistics?.data.monthlyMobileQcCnt;
     },
     totalSearchCount() {
-      return this.pcSearchCount + this.mobileSearchCount;
+      return this.pcSearchCount + this.mobileSearchCount || 0;
     },
-    // searchCountDelta() {
-
-    // },
     totalPublishCount() {
-      return this.blogPublishCount + this.cafePublishCount;
+      return this.blogPublishCount + this.cafePublishCount || 0;
     },
     totalLastPublishCount() {
-      return this.lastCafePublishCount + this.lastBlogPublishCount;
+      return this.lastCafePublishCount + this.lastBlogPublishCount || 0;
     },
-    publishCountDelta() {
+    publishCountDeltaRatio() {
+      return this.totalPublishCount / this.totalLastPublishCount;
+    },
+    publishCountDeltaInPercentage() {
       if (!this.totalLastPublishCount || !this.totalLastPublishCount) {
-        return "N/A";
+        return 0;
       }
-      const ratio = this.totalPublishCount / this.totalLastPublishCount;
-      const percent = (ratio - 1) * 100;
+      const percent = (this.publishCountDeltaRatio - 1) * 100;
       return percent;
+    },
+    searchCountDeltaInPercentage() {
+      return (this.totalSearchCountRelativeRatio - 1) * 100;
     },
   },
   methods: {
@@ -337,6 +350,7 @@ export default {
       this.setPublishCount();
       this.setSectionOrder();
       this.setRelKeywordStatistics();
+      this.setTotalSearchCountRelativeRatio();
     },
     async setRelKeywordStatistics() {
       this.relKeywordStatisticsReady = false;
@@ -346,6 +360,31 @@ export default {
       );
       this.relKeywordStatistics = data;
       this.relKeywordStatisticsReady = true;
+    },
+    async setTotalSearchCountRelativeRatio() {
+      this.totalSearchCountRelativeRatioReady = false;
+      const lastMonth = moment()
+        .subtract(1, "months")
+        .format("YYYY-MM-DD");
+      const today = moment().format("YYYY-MM-DD");
+      const { ratio } = await getRelativeRatio(this.keyword, lastMonth, today);
+      /*
+      ratio: {
+      "data": [
+        {
+          "period": "2021-06-01", 
+          "ratio": 100
+        }
+      ], 
+      "keyword": "\ud3fc\ud074\ub80c\uc9d5"
+      }
+      */
+      const data = ratio[0].data;
+      const todayRatio = data[data.length - 1].ratio;
+      const lastMonthRatio = data[0].ratio;
+      const diff = todayRatio / lastMonthRatio;
+      this.totalSearchCountRelativeRatio = diff;
+      this.totalSearchCountRelativeRatioReady = true;
     },
     async setPublishCount() {
       this.publishCountReady = false;
@@ -380,6 +419,25 @@ export default {
       this.mobileSectionOrder = mobile;
       this.sectionOrderReady = true;
     },
+    clearLevelAndBeyond(level) {
+      for (let i = level; i < 4; i++) {
+        // todo - 4 is magic number;
+        this.$set(this.categoryOptionsByLevel, i, []);
+        this.$set(this.selectedCategoriesByLevel, i, "unset");
+      }
+    },
+    async handleCategoryChange(level, categoryId) {
+      console.log({ level, categoryId });
+      if (categoryId === "unset") {
+        this.clearLevelAndBeyond(level + 1);
+      } else {
+        this.clearLevelAndBeyond(level + 1);
+        let nextLevelOptions = (await getNaverCategory(categoryId)).childList;
+        console.log({ nextLevelOptions });
+        this.$set(this.categoryOptionsByLevel, level + 1, nextLevelOptions);
+        this.$set(this.selectedCategoriesByLevel, level, categoryId);
+      }
+    },
     onChartTypeChange(event) {
       this.chartType = event.target.value;
     },
@@ -411,3 +469,8 @@ export default {
   },
 };
 </script>
+<style scoped>
+.category-select {
+  min-width: 150px;
+}
+</style>
