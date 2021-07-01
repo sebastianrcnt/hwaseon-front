@@ -39,5 +39,9 @@ body {
 }
 
 @media (max-width: 800px) {
+  body {
+    align-items: flex-start;
+    height: 1000vh;
+  }
 }
 </style>
