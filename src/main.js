@@ -8,6 +8,7 @@ import "ant-design-vue/dist/antd.less";
 
 import { store } from "./store";
 
+Vue.config.silent = true;
 Vue.use(Antd);
 
 Vue.config.productionTip = false;
