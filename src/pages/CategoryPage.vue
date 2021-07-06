@@ -280,12 +280,19 @@
             style="width: 30%"
             placeholder="키워드 (ex) 탈모샴푸"
             enter-button="검색하기"
+            v-model="keyword2"
+            @search="handleSearchNaverShoppingProductsSearch"
           >
           </a-input-search>
         </a-input-group>
       </a-row>
       <a-row>
-        <a-table :columns="columns" :data-source="dataSource"> </a-table>
+        <a-table
+          :columns="naverShoppingProductsColumns"
+          :data-source="naverShoppingProductsDataSource"
+          :loading="naverShoppingProductsLoading"
+        >
+        </a-table>
       </a-row>
     </a-card>
     <!-- RESULT -->
@@ -307,6 +314,7 @@ import {
 } from "../fetchers";
 import moment from "moment";
 import { lastMonth, last2Month, today } from "@/utils/time";
+import { mapGetters, mapState } from "vuex";
 
 // Columns
 // Search Result
@@ -401,6 +409,28 @@ const categoryShoppingTrendingKeywordsColumns = [
   },
 ];
 
+const naverShoppingProductsColumns = [
+  { key: "totalRank", dataIndex: "totalRank", title: "순위" },
+  {
+    key: "isAd",
+    dataIndex: "isAd",
+    title: "광고여부",
+    customRender(text) {
+      return text ? "예" : "아니오";
+    },
+  },
+  {
+    key: "productName",
+    dataIndex: "productName",
+    title: "상품명",
+    width: "30%",
+  },
+  { key: "mallName", dataIndex: "mallName", title: "스토어명" },
+  { key: "price", dataIndex: "price", title: "가격" },
+  { key: "deliveryPrice", dataIndex: "deliveryPrice", title: "배달비" },
+  { key: "salescounts", dataIndex: "salescounts", title: "판매량" },
+];
+
 export default {
   name: "MainPage",
   components: {
@@ -447,6 +477,10 @@ export default {
       categoryShoppingTrendingKeywordsColumns,
       categoryShoppingTrendingKeywords: [],
       isCategoryShoppingTrendingKeywordsReady: true,
+      // keyword2
+      keyword2: "",
+      // columns
+      naverShoppingProductsColumns,
     };
   },
   async mounted() {
@@ -520,6 +554,12 @@ export default {
         };
       });
     },
+    ...mapState("naverShoppingProductsService", {
+      naverShoppingProductsLoading: (state) => state.loading,
+    }),
+    ...mapGetters("naverShoppingProductsService", [
+      "naverShoppingProductsDataSource",
+    ]),
   },
   methods: {
     search() {
@@ -640,6 +680,10 @@ export default {
     },
     async handleCategoryShoppingTrendingKeywordsSearchClick() {
       this.setCategoryShoppingTrendingKeywords();
+    },
+    handleSearchNaverShoppingProductsSearch() {
+      console.log({ keyword2: this.keyword2 });
+      this.$store.dispatch("naverShoppingProductsService/fetch", this.keyword2);
     },
     onChartTypeChange(event) {
       this.chartType = event.target.value;

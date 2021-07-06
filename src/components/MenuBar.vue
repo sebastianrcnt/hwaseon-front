@@ -29,7 +29,6 @@ export default {
   },
   methods: {
     handleMenuSelect({ item, key, keyPath }) {
-      console.log({ item, key, keyPath });
       this.$router.push(key);
     },
   },
