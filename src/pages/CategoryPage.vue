@@ -155,7 +155,10 @@
       <a-spin
         :spinning="!(relKeywordStatisticsReady && autocompleteKeywordsReady)"
       >
-        <a-table :columns="searchResultColumns" :data-source="relKeywordStatisticsDataSource">
+        <a-table
+          :columns="searchResultColumns"
+          :data-source="relKeywordStatisticsDataSource"
+        >
           <span slot="compIdx" slot-scope="compIdx">
             <a-tag
               :color="
@@ -305,9 +308,8 @@ import {
 import moment from "moment";
 import { lastMonth, last2Month, today } from "@/utils/time";
 
-const columns = [{ title: "Name", dataIndex: "name" }];
-const dataSource = [{ key: 1, name: "Sebastian Jeong" }];
-
+// Columns
+// Search Result
 const searchResultColumns = [
   {
     key: "relKeyword",
@@ -388,13 +390,6 @@ const searchResultColumns = [
   },
 ];
 
-/*
-  {
-    "keyword": "아이폰",
-    "linkId": "아이폰",
-    "rank": 1
-  },
-*/
 const categoryShoppingTrendingKeywordsColumns = [
   { key: "rank", dataIndex: "rank", title: "순위", width: "20%" },
   { key: "keyword", dataIndex: "keyword", title: "키워드" },
@@ -414,27 +409,24 @@ export default {
   },
   data() {
     return {
-      current: ["1"],
+      // Chart
       chartData: null,
-      depth: 0,
       chartOptions: {
         responsive: true,
         maintainAspectRatio: false,
       },
       chartType: "age",
       chartPeriod: "month",
-      columns,
-      categoryShoppingTrendingKeywordsColumns,
-      searchResultColumns,
-      dataSource,
       // search
       keyword: null,
       // relKeywordStatistics
       relKeywordStatistics: null,
+      searchResultColumns,
       relKeywordStatisticsReady: true,
-      // relative ratio
-      totalSearchCountRelativeRatio: 0,
-      totalSearchCountRelativeRatioReady: true,
+      // autocomplete
+      naverSearchAutocompleteKeywords: [],
+      naverShoppingAutocompleteKeywords: [],
+      autocompleteKeywordsReady: true,
       // publishCount
       lastBlogPublishCount: 0,
       lastCafePublishCount: 0,
@@ -445,16 +437,16 @@ export default {
       pcSectionOrder: [],
       mobileSectionOrder: [],
       sectionOrderReady: true,
+      // relative ratio
+      totalSearchCountRelativeRatio: 0,
+      totalSearchCountRelativeRatioReady: true,
       // categories
       categoryOptionsByLevel: [[], [], [], []],
       selectedCategoriesByLevel: ["unset", "unset", "unset", "unset"],
       // category shopping trend
+      categoryShoppingTrendingKeywordsColumns,
       categoryShoppingTrendingKeywords: [],
       isCategoryShoppingTrendingKeywordsReady: true,
-      // autocomplete
-      naverSearchAutocompleteKeywords: [],
-      naverShoppingAutocompleteKeywords: [],
-      autocompleteKeywordsReady: true,
     };
   },
   async mounted() {
@@ -464,6 +456,7 @@ export default {
     this.$set(this.categoryOptionsByLevel, 0, topCategories.childList);
   },
   computed: {
+    // searchCounts
     pcSearchCount() {
       return this.relKeywordStatistics?.data.monthlyPcQcCnt;
     },
@@ -473,6 +466,7 @@ export default {
     totalSearchCount() {
       return this.pcSearchCount + this.mobileSearchCount || 0;
     },
+    // publishCounts
     totalPublishCount() {
       return this.blogPublishCount + this.cafePublishCount || 0;
     },
@@ -490,8 +484,11 @@ export default {
       return percent;
     },
     searchCountDeltaInPercentage() {
-      return this.totalSearchCountRelativeRatio === 0 ? 0 : (this.totalSearchCountRelativeRatio - 1) * 100;
+      return this.totalSearchCountRelativeRatio === 0
+        ? 0
+        : (this.totalSearchCountRelativeRatio - 1) * 100;
     },
+    // category
     selectedCategoryId() {
       for (
         let level = 0;
@@ -503,10 +500,9 @@ export default {
           return this.selectedCategoriesByLevel[level - 1];
         }
       }
-
       return -1;
     },
-    // relKeywordStatisticsDataSource
+    // data sources
     relKeywordStatisticsDataSource() {
       return this.relKeywordStatistics?.keywords.map((keywordData, index) => {
         // populate sources
@@ -534,6 +530,7 @@ export default {
       this.setNaverSearchAutocompleteKeywords();
       this.setNaverShoppingAutocompleteKeywords();
     },
+    // Setters
     async setRelKeywordStatistics() {
       this.relKeywordStatisticsReady = false;
       const data = await getRelKeywordsStatistics(
@@ -593,26 +590,7 @@ export default {
       this.mobileSectionOrder = mobile;
       this.sectionOrderReady = true;
     },
-    clearLevelAndBeyond(level) {
-      for (let i = level; i < 4; i++) {
-        // todo - 4 is magic number;
-        this.$set(this.categoryOptionsByLevel, i, []);
-        this.$set(this.selectedCategoriesByLevel, i, "unset");
-      }
-    },
-    async handleCategoryChange(level, categoryId) {
-      console.log({ level, categoryId });
-      if (categoryId === "unset") {
-        this.clearLevelAndBeyond(level + 1);
-      } else {
-        this.clearLevelAndBeyond(level + 1);
-        let nextLevelOptions = (await getNaverCategory(categoryId)).childList;
-        console.log({ nextLevelOptions });
-        this.$set(this.categoryOptionsByLevel, level + 1, nextLevelOptions);
-        this.$set(this.selectedCategoriesByLevel, level, categoryId);
-      }
-    },
-    async handleCategoryShoppingTrendingKeywordsSearchClick() {
+    async setCategoryShoppingTrendingKeywords() {
       this.isCategoryShoppingTrendingKeywordsReady = false;
       if (this.selectedCategoryId) {
         const keywords = await getCategoryShoppingTrendingKeywords(
@@ -640,6 +618,28 @@ export default {
         console.error("shit");
       }
       this.isCategoryShoppingTrendingKeywordsReady = true;
+    },
+    clearLevelAndBeyond(level) {
+      for (let i = level; i < 4; i++) {
+        // todo - 4 is magic number;
+        this.$set(this.categoryOptionsByLevel, i, []);
+        this.$set(this.selectedCategoriesByLevel, i, "unset");
+      }
+    },
+    // Handlers
+    async handleCategoryChange(level, categoryId) {
+      console.log({ level, categoryId });
+      if (categoryId === "unset") {
+        this.clearLevelAndBeyond(level + 1);
+      } else {
+        this.clearLevelAndBeyond(level + 1);
+        let nextLevelOptions = (await getNaverCategory(categoryId)).childList;
+        this.$set(this.categoryOptionsByLevel, level + 1, nextLevelOptions);
+        this.$set(this.selectedCategoriesByLevel, level, categoryId);
+      }
+    },
+    async handleCategoryShoppingTrendingKeywordsSearchClick() {
+      this.setCategoryShoppingTrendingKeywords();
     },
     onChartTypeChange(event) {
       this.chartType = event.target.value;
