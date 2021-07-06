@@ -155,7 +155,7 @@
       <a-spin
         :spinning="!(relKeywordStatisticsReady && autocompleteKeywordsReady)"
       >
-        <a-table :columns="searchResultColumns" :data-source="relKeywordStatisticsDataSource">
+        <a-table :columns="columns1" :data-source="dataSource1">
           <span slot="compIdx" slot-scope="compIdx">
             <a-tag
               :color="
@@ -170,15 +170,12 @@
               >{{ compIdx }}</a-tag
             >
           </span>
-          <span slot="source" slot-scope="source">
-            <a-tag v-if="source.relkeyword">
-              연검
+          <span slot="autocomplete" slot-scope="autocomplete">
+            <a-tag v-if="autocomplete?.nsearch">
+              N검색
             </a-tag>
-            <a-tag v-if="source.nsearch" color="#2DB400">
-              N자
-            </a-tag>
-            <a-tag v-if="source.nshopping" color="#87d068">
-              N쇼
+            <a-tag v-if="autocomplete?.nshopping">
+              N쇼핑
             </a-tag>
           </span>
         </a-table>
@@ -255,19 +252,12 @@
             {{ option.name }}
           </a-select-option>
         </a-select>
-        <a-button
-          type="primary"
-          @click="handleCategoryShoppingTrendingKeywordsSearchClick"
-        >
+        <a-button type="primary">
           검색하기
         </a-button>
       </a-row>
       <a-row>
-        <a-table
-          :columns="categoryShoppingTrendingKeywordsColumns"
-          :data-source="categoryShoppingTrendingKeywords"
-        >
-        </a-table>
+        <a-table :columns="columns" :data-source="dataSource"> </a-table>
       </a-row>
     </a-card>
     <a-card title="해당 키워드 N쇼핑 판매량(NPay 기준 | 최근 7일간)">
@@ -293,7 +283,6 @@
 import MainLayout from "../layouts/MainLayout.vue";
 import LineChart from "../components/LineChart";
 import {
-  getCategoryShoppingTrendingKeywords,
   getNaverCategory,
   getNaverSearchAutocompleteKeywords,
   getNaverShoppingAutocompleteKeywords,
@@ -303,73 +292,53 @@ import {
   getSearchSectionOrder,
 } from "../fetchers";
 import moment from "moment";
-import { lastMonth, last2Month, today } from "@/utils/time";
 
 const columns = [{ title: "Name", dataIndex: "name" }];
 const dataSource = [{ key: 1, name: "Sebastian Jeong" }];
 
-const searchResultColumns = [
+const columns1 = [
   {
     key: "relKeyword",
     dataIndex: "relKeyword",
     title: "키워드",
   },
   {
-    key: "source",
-    dataIndex: "source",
-    title: "소스",
-    scopedSlots: { customRender: "source" },
-    filters: [
-      { text: "연검", value: "relkeyword" },
-      { text: "N자", value: "nsearch" },
-      { text: "N쇼", value: "nshopping" },
-    ],
-    filterMultiple: true,
-    onFilter: (value, record) => {
-      return record.source[value];
-    },
-  },
-  {
     key: "monthlyMobileQcCnt",
     dataIndex: "monthlyMobileQcCnt",
     title: "MO 검색량",
-    sorter: (a, b) => b.monthlyMobileQcCnt - a.monthlyMobileQcCnt,
-    sortDirections: ["ascend", "descend"],
   },
+  { key: "monthlyPcQcCnt", dataIndex: "monthlyPcQcCnt", title: "PC 검색량" },
   {
-    key: "monthlyPcQcCnt",
-    dataIndex: "monthlyPcQcCnt",
-    title: "PC 검색량",
-    sorter: (a, b) => b.monthlyPcQcCnt - a.monthlyPcQcCnt,
-    sortDirections: ["ascend", "descend"],
+    key: "autocomplete",
+    dataIndex: "autocomplete",
+    title: "소스",
+    scopedSlots: { customRender: "autocomplete" },
   },
   {
     title: "Total",
     customRender(text, record, index) {
       return record.monthlyPcQcCnt + record.monthlyMobileQcCnt;
     },
-    sorter: (a, b) => b.monthlyPcQcCnt - a.monthlyPcQcCnt,
-    sortDirections: ["ascend", "descend"],
   },
   {
     key: "monthlyAveMobileClkCnt",
     dataIndex: "monthlyAveMobileClkCnt",
     title: "MO 광고클릭",
-    sorter: (a, b) => b.monthlyAveMobileClkCnt - a.monthlyAveMobileClkCnt,
-    sortDirections: ["ascend", "descend"],
-    customRender(text, record, index) {
-      return `${text} (${record.monthlyAveMobileCtr})`;
-    },
+  },
+  {
+    key: "monthlyAveMobileCtr",
+    dataIndex: "monthlyAveMobileCtr",
+    title: "MO 클릭전환",
   },
   {
     key: "monthlyAvePcClkCnt",
     dataIndex: "monthlyAvePcClkCnt",
     title: "PC 광고클릭",
-    sorter: (a, b) => b.monthlyAvePcClkCnt - a.monthlyAvePcClkCnt,
-    sortDirections: ["ascend", "descend"],
-    customRender(text, record, index) {
-      return `${text} (${record.monthlyAvePcCtr})`;
-    },
+  },
+  {
+    key: "monthlyAvePcCtr",
+    dataIndex: "monthlyAvePcCtr",
+    title: "PC 클릭전환",
   },
   {
     key: "compIdx",
@@ -378,31 +347,6 @@ const searchResultColumns = [
     scopedSlots: {
       customRender: "compIdx",
     },
-    sorter: (a, b) => {
-      const map = { 높음: 3, 중간: 2, 낮음: 1 };
-      const aCompIdx = map[a.compIdx] || 0;
-      const bCompIdx = map[b.compIdx] || 0;
-      return aCompIdx - bCompIdx;
-    },
-    sortDirections: ["ascend", "descend"],
-  },
-];
-
-/*
-  {
-    "keyword": "아이폰",
-    "linkId": "아이폰",
-    "rank": 1
-  },
-*/
-const categoryShoppingTrendingKeywordsColumns = [
-  { key: "rank", dataIndex: "rank", title: "순위", width: "20%" },
-  { key: "keyword", dataIndex: "keyword", title: "키워드" },
-  {
-    key: "rankDelta",
-    dataIndex: "rankDelta",
-    title: "순위변동(지난달 대비)",
-    width: "20%",
   },
 ];
 
@@ -424,8 +368,7 @@ export default {
       chartType: "age",
       chartPeriod: "month",
       columns,
-      categoryShoppingTrendingKeywordsColumns,
-      searchResultColumns,
+      columns1,
       dataSource,
       // search
       keyword: null,
@@ -448,9 +391,6 @@ export default {
       // categories
       categoryOptionsByLevel: [[], [], [], []],
       selectedCategoriesByLevel: ["unset", "unset", "unset", "unset"],
-      // category shopping trend
-      categoryShoppingTrendingKeywords: [],
-      isCategoryShoppingTrendingKeywordsReady: true,
       // autocomplete
       naverSearchAutocompleteKeywords: [],
       naverShoppingAutocompleteKeywords: [],
@@ -490,37 +430,20 @@ export default {
       return percent;
     },
     searchCountDeltaInPercentage() {
-      return this.totalSearchCountRelativeRatio === 0 ? 0 : (this.totalSearchCountRelativeRatio - 1) * 100;
+      return (this.totalSearchCountRelativeRatio - 1) * 100;
     },
-    selectedCategoryId() {
-      for (
-        let level = 0;
-        level < this.selectedCategoriesByLevel.length;
-        level++
-      ) {
-        let cid = this.selectedCategoriesByLevel[level];
-        if (cid === "unset") {
-          return this.selectedCategoriesByLevel[level - 1];
-        }
-      }
-
-      return -1;
-    },
-    // relKeywordStatisticsDataSource
-    relKeywordStatisticsDataSource() {
-      return this.relKeywordStatistics?.keywords.map((keywordData, index) => {
-        // populate sources
-        const relkeyword = true;
-        const nsearch = this.naverSearchAutocompleteKeywords.includes(
-          keywordData.relKeyword
-        );
+    // dataSource1
+    dataSource1() {
+      return this.relKeywordStatistics?.keywords.map((keyword, index) => {
+        // populate autocomplete keywords
+        const nsearch = this.naverSearchAutocompleteKeywords.includes(keyword);
         const nshopping = this.naverShoppingAutocompleteKeywords.includes(
-          keywordData.relKeyword
+          keyword
         );
         return {
           key: index,
-          ...keywordData,
-          source: { relkeyword, nsearch, nshopping },
+          ...keyword,
+          autocomplete: {nsearch, nshopping}
         };
       });
     },
@@ -545,12 +468,22 @@ export default {
     },
     async setTotalSearchCountRelativeRatio() {
       this.totalSearchCountRelativeRatioReady = false;
-      const { ratio } = await getRelativeRatio(
-        this.keyword,
-        lastMonth(),
-        today()
-      );
-
+      const lastMonth = moment()
+        .subtract(1, "months")
+        .format("YYYY-MM-DD");
+      const today = moment().format("YYYY-MM-DD");
+      const { ratio } = await getRelativeRatio(this.keyword, lastMonth, today);
+      /*
+      ratio: {
+      "data": [
+        {
+          "period": "2021-06-01",
+          "ratio": 100
+        }
+      ],
+      "keyword": "\ud3fc\ud074\ub80c\uc9d5"
+      }
+      */
       const data = ratio[0].data;
       const todayRatio = data[data.length - 1].ratio;
       const lastMonthRatio = data[0].ratio;
@@ -560,16 +493,22 @@ export default {
     },
     async setPublishCount() {
       this.publishCountReady = false;
-
+      const last2Month = moment()
+        .subtract(2, "months")
+        .format("YYYY-MM-DD");
+      const lastMonth = moment()
+        .subtract(1, "months")
+        .format("YYYY-MM-DD");
+      const today = moment().format("YYYY-MM-DD");
       const { blog: blogLast, cafe: cafeLast } = await getPublishCount(
         this.keyword,
-        last2Month(),
-        lastMonth()
+        last2Month,
+        lastMonth
       );
       const { blog, cafe } = await getPublishCount(
         this.keyword,
-        lastMonth(),
-        today()
+        lastMonth,
+        today
       );
 
       this.blogPublishCount = blog;
@@ -611,35 +550,6 @@ export default {
         this.$set(this.categoryOptionsByLevel, level + 1, nextLevelOptions);
         this.$set(this.selectedCategoriesByLevel, level, categoryId);
       }
-    },
-    async handleCategoryShoppingTrendingKeywordsSearchClick() {
-      this.isCategoryShoppingTrendingKeywordsReady = false;
-      if (this.selectedCategoryId) {
-        const keywords = await getCategoryShoppingTrendingKeywords(
-          this.selectedCategoryId,
-          lastMonth(),
-          today()
-        );
-        const lastKeywords = await getCategoryShoppingTrendingKeywords(
-          this.selectedCategoryId,
-          last2Month(),
-          lastMonth()
-        );
-
-        this.categoryShoppingTrendingKeywords = keywords.map((keywordRow) => {
-          const found = lastKeywords.find(
-            (k) => k.keyword === keywordRow.keyword
-          );
-          const lastRank = found?.rank;
-          return {
-            ...keywordRow,
-            rankDelta: found ? keywordRow.rank - lastRank : "-",
-          };
-        });
-      } else {
-        console.error("shit");
-      }
-      this.isCategoryShoppingTrendingKeywordsReady = true;
     },
     onChartTypeChange(event) {
       this.chartType = event.target.value;
