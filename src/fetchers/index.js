@@ -57,7 +57,7 @@ export const getCategoryShoppingTrendingKeywords = (
     }
   ).then(extractData);
 
-export const getNaverShoppingProducts = (keyword) =>
+export const fetchNaverShoppingProducts = (keyword) =>
   ApiClient.get("api/v1/keyword-services/get-naver-shopping-products", {
     params: { keyword },
   }).then(extractData);
