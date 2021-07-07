@@ -5,14 +5,14 @@
         size="large"
         placeholder="검색어 입력"
         enter-button
-        @search="search"
+        @search="handleSearch"
         v-model="keyword"
       ></a-input-search>
     </a-row>
-    <a-row :gutter="10" type="flex">
-      <a-col :span="12">
-        <a-row style="margin-bottom: 10px;">
-          <a-spin :spinning="!relKeywordStatisticsReady">
+    <a-spin :spinning="loading">
+      <a-row :gutter="10" type="flex">
+        <a-col :span="12">
+          <a-row style="margin-bottom: 10px;">
             <a-card title="월간 검색수">
               <a-row>
                 <a-col :span="6">
@@ -42,10 +42,8 @@
                 </a-col>
               </a-row>
             </a-card>
-          </a-spin>
-        </a-row>
-        <a-row>
-          <a-spin :spinning="!publishCountReady">
+          </a-row>
+          <a-row>
             <a-card title="월간 발행량">
               <a-row>
                 <a-col :span="6">
@@ -79,11 +77,9 @@
                 </a-col>
               </a-row>
             </a-card>
-          </a-spin>
-        </a-row>
-      </a-col>
-      <a-col :span="12">
-        <a-spin :spinning="!sectionOrderReady">
+          </a-row>
+        </a-col>
+        <a-col :span="12">
           <a-card
             title="쇼핑&뷰 섹션 위치"
             style="min-height: 340px; height: 100%;"
@@ -115,9 +111,9 @@
               </a-col>
             </a-row>
           </a-card>
-        </a-spin>
-      </a-col>
-    </a-row>
+        </a-col>
+      </a-row>
+    </a-spin>
     <a-card title="그래프">
       <a-row mode="flex">
         <a-col span="6">
@@ -152,40 +148,37 @@
     </a-card>
     <!-- Search Results -->
     <a-card title="검색 결과">
-      <a-spin
-        :spinning="!(relKeywordStatisticsReady && autocompleteKeywordsReady)"
+      <a-table
+        :columns="searchResultColumns"
+        :data-source="relKeywordStatisticsDataSource"
+        :loading="loading"
       >
-        <a-table
-          :columns="searchResultColumns"
-          :data-source="relKeywordStatisticsDataSource"
-        >
-          <span slot="compIdx" slot-scope="compIdx">
-            <a-tag
-              :color="
-                compIdx === '높음'
-                  ? 'red'
-                  : compIdx === '중간'
-                  ? 'orange'
-                  : compIdx === '낮음'
-                  ? 'green'
-                  : ''
-              "
-              >{{ compIdx }}</a-tag
-            >
-          </span>
-          <span slot="source" slot-scope="source">
-            <a-tag v-if="source.relkeyword">
-              연검
-            </a-tag>
-            <a-tag v-if="source.nsearch" color="#2DB400">
-              N자
-            </a-tag>
-            <a-tag v-if="source.nshopping" color="#87d068">
-              N쇼
-            </a-tag>
-          </span>
-        </a-table>
-      </a-spin>
+        <span slot="compIdx" slot-scope="compIdx">
+          <a-tag
+            :color="
+              compIdx === '높음'
+                ? 'red'
+                : compIdx === '중간'
+                ? 'orange'
+                : compIdx === '낮음'
+                ? 'green'
+                : ''
+            "
+            >{{ compIdx }}</a-tag
+          >
+        </span>
+        <span slot="source" slot-scope="source">
+          <a-tag v-if="source.relkeyword">
+            연검
+          </a-tag>
+          <a-tag v-if="source.nsearch" color="#2DB400">
+            N자
+          </a-tag>
+          <a-tag v-if="source.nshopping" color="#87d068">
+            N쇼
+          </a-tag>
+        </span>
+      </a-table>
     </a-card>
     <!-- Category Keywords -->
     <a-card title="카테고리별 인기검색어">
@@ -303,18 +296,12 @@
 import MainLayout from "../layouts/MainLayout.vue";
 import LineChart from "../components/LineChart";
 import {
-  getCategoryShoppingTrendingKeywords,
-  getNaverCategory,
-  getNaverSearchAutocompleteKeywords,
-  getNaverShoppingAutocompleteKeywords,
-  getPublishCount,
-  getRelativeRatio,
-  getRelKeywordsStatistics,
-  getSearchSectionOrder,
+  fetchCategoryShoppingTrendingKeywords,
+  fetchNaverCategory,
 } from "../fetchers";
-import moment from "moment";
-import { lastMonth, last2Month, today } from "@/utils/time";
+
 import { mapGetters, mapState } from "vuex";
+import { last2Month, lastMonth, today } from "../utils/time";
 
 // Columns
 // Search Result
@@ -448,28 +435,7 @@ export default {
       chartType: "age",
       chartPeriod: "month",
       // search
-      keyword: null,
-      // relKeywordStatistics
-      relKeywordStatistics: null,
-      searchResultColumns,
-      relKeywordStatisticsReady: true,
-      // autocomplete
-      naverSearchAutocompleteKeywords: [],
-      naverShoppingAutocompleteKeywords: [],
-      autocompleteKeywordsReady: true,
-      // publishCount
-      lastBlogPublishCount: 0,
-      lastCafePublishCount: 0,
-      blogPublishCount: 0,
-      cafePublishCount: 0,
-      publishCountReady: true,
-      // section order
-      pcSectionOrder: [],
-      mobileSectionOrder: [],
-      sectionOrderReady: true,
-      // relative ratio
-      totalSearchCountRelativeRatio: 0,
-      totalSearchCountRelativeRatioReady: true,
+      keyword: "",
       // categories
       categoryOptionsByLevel: [[], [], [], []],
       selectedCategoriesByLevel: ["unset", "unset", "unset", "unset"],
@@ -480,48 +446,17 @@ export default {
       // keyword2
       keyword2: "",
       // columns
+      searchResultColumns,
       naverShoppingProductsColumns,
     };
   },
   async mounted() {
     this.fillData();
     // get all categories
-    const topCategories = await getNaverCategory(0);
+    const topCategories = await fetchNaverCategory(0);
     this.$set(this.categoryOptionsByLevel, 0, topCategories.childList);
   },
   computed: {
-    // searchCounts
-    pcSearchCount() {
-      return this.relKeywordStatistics?.data.monthlyPcQcCnt;
-    },
-    mobileSearchCount() {
-      return this.relKeywordStatistics?.data.monthlyMobileQcCnt;
-    },
-    totalSearchCount() {
-      return this.pcSearchCount + this.mobileSearchCount || 0;
-    },
-    // publishCounts
-    totalPublishCount() {
-      return this.blogPublishCount + this.cafePublishCount || 0;
-    },
-    totalLastPublishCount() {
-      return this.lastCafePublishCount + this.lastBlogPublishCount || 0;
-    },
-    publishCountDeltaRatio() {
-      return this.totalPublishCount / this.totalLastPublishCount;
-    },
-    publishCountDeltaInPercentage() {
-      if (!this.totalLastPublishCount || !this.totalLastPublishCount) {
-        return 0;
-      }
-      const percent = (this.publishCountDeltaRatio - 1) * 100;
-      return percent;
-    },
-    searchCountDeltaInPercentage() {
-      return this.totalSearchCountRelativeRatio === 0
-        ? 0
-        : (this.totalSearchCountRelativeRatio - 1) * 100;
-    },
     // category
     selectedCategoryId() {
       for (
@@ -536,9 +471,9 @@ export default {
       }
       return -1;
     },
-    // data sources
+    // DataSources
     relKeywordStatisticsDataSource() {
-      return this.relKeywordStatistics?.keywords.map((keywordData, index) => {
+      return this.relKeywordStatistics.keywords?.map((keywordData, index) => {
         // populate sources
         const relkeyword = true;
         const nsearch = this.naverSearchAutocompleteKeywords.includes(
@@ -554,6 +489,29 @@ export default {
         };
       });
     },
+    // data sources
+    ...mapState("keywordStatisticsService", [
+      "loading",
+      "relKeywordStatistics",
+      "naverSearchAutocompleteKeywords",
+      "naverShoppingAutocompleteKeywords",
+      "lastBlogPublishCount",
+      "lastCafePublishCount",
+      "pcSectionOrder",
+      "mobileSectionOrder",
+      "blogPublishCount",
+      "cafePublishCount",
+    ]),
+    ...mapGetters("keywordStatisticsService", [
+      "pcSearchCount",
+      "mobileSearchCount",
+      "totalSearchCount",
+      "totalPublishCount",
+      "totalLastPublishCount",
+      "publishCountDeltaRatio",
+      "publishCountDeltaInPercentage",
+      "searchCountDeltaInPercentage",
+    ]),
     ...mapState("naverShoppingProductsService", {
       naverShoppingProductsLoading: (state) => state.loading,
     }),
@@ -562,83 +520,18 @@ export default {
     ]),
   },
   methods: {
-    search() {
-      this.setPublishCount();
-      this.setSectionOrder();
-      this.setRelKeywordStatistics();
-      this.setTotalSearchCountRelativeRatio();
-      this.setNaverSearchAutocompleteKeywords();
-      this.setNaverShoppingAutocompleteKeywords();
-    },
-    // Setters
-    async setRelKeywordStatistics() {
-      this.relKeywordStatisticsReady = false;
-      const data = await getRelKeywordsStatistics(
-        this.keyword,
-        moment().month()
-      );
-      this.relKeywordStatistics = data;
-      this.relKeywordStatisticsReady = true;
-    },
-    async setTotalSearchCountRelativeRatio() {
-      this.totalSearchCountRelativeRatioReady = false;
-      const { ratio } = await getRelativeRatio(
-        this.keyword,
-        lastMonth(),
-        today()
-      );
-
-      const data = ratio[0].data;
-      const todayRatio = data[data.length - 1].ratio;
-      const lastMonthRatio = data[0].ratio;
-      const diff = todayRatio / lastMonthRatio;
-      this.totalSearchCountRelativeRatio = diff;
-      this.totalSearchCountRelativeRatioReady = true;
-    },
-    async setPublishCount() {
-      this.publishCountReady = false;
-
-      const { blog: blogLast, cafe: cafeLast } = await getPublishCount(
-        this.keyword,
-        last2Month(),
-        lastMonth()
-      );
-      const { blog, cafe } = await getPublishCount(
-        this.keyword,
-        lastMonth(),
-        today()
-      );
-
-      this.blogPublishCount = blog;
-      this.cafePublishCount = cafe;
-      this.lastBlogPublishCount = blogLast;
-      this.lastCafePublishCount = cafeLast;
-      this.publishCountReady = true;
-    },
-    async setNaverSearchAutocompleteKeywords() {
-      const keywords = await getNaverSearchAutocompleteKeywords(this.keyword);
-      this.naverSearchAutocompleteKeywords = keywords;
-    },
-    async setNaverShoppingAutocompleteKeywords() {
-      const keywords = await getNaverShoppingAutocompleteKeywords(this.keyword);
-      this.naverShoppingAutocompleteKeywords = keywords;
-    },
-    async setSectionOrder() {
-      this.sectionOrderReady = false;
-      const { mobile, pc } = await getSearchSectionOrder(this.keyword);
-      this.pcSectionOrder = pc;
-      this.mobileSectionOrder = mobile;
-      this.sectionOrderReady = true;
+    handleSearch() {
+      this.$store.dispatch("keywordStatisticsService/search", this.keyword);
     },
     async setCategoryShoppingTrendingKeywords() {
       this.isCategoryShoppingTrendingKeywordsReady = false;
       if (this.selectedCategoryId) {
-        const keywords = await getCategoryShoppingTrendingKeywords(
+        const keywords = await fetchCategoryShoppingTrendingKeywords(
           this.selectedCategoryId,
           lastMonth(),
           today()
         );
-        const lastKeywords = await getCategoryShoppingTrendingKeywords(
+        const lastKeywords = await fetchCategoryShoppingTrendingKeywords(
           this.selectedCategoryId,
           last2Month(),
           lastMonth()
@@ -673,7 +566,7 @@ export default {
         this.clearLevelAndBeyond(level + 1);
       } else {
         this.clearLevelAndBeyond(level + 1);
-        let nextLevelOptions = (await getNaverCategory(categoryId)).childList;
+        let nextLevelOptions = (await fetchNaverCategory(categoryId)).childList;
         this.$set(this.categoryOptionsByLevel, level + 1, nextLevelOptions);
         this.$set(this.selectedCategoriesByLevel, level, categoryId);
       }

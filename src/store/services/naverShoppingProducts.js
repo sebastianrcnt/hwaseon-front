@@ -1,4 +1,4 @@
-import { fetchNaverShoppingProducts } from "@/fetchers";
+import { fetchNaverShoppingProducts } from "../../fetchers/index";
 
 export const naverShoppingProductsService = {
   namespaced: true,
