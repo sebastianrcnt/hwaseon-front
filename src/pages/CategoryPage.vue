@@ -455,6 +455,10 @@ export default {
     // get all categories
     const topCategories = await fetchNaverCategory(0);
     this.$set(this.categoryOptionsByLevel, 0, topCategories.childList);
+    if (this.$route.query['keyword']) {
+      this.keyword = this.$route.query['keyword'];
+      this.handleSearch()
+    }
   },
   computed: {
     // category

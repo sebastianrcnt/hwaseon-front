@@ -5,7 +5,11 @@
         <a-row align="middle" type="flex" style="margin-bottom: 16px;">
           <a-col span="6">마켓 선택</a-col>
           <a-col span="18">
-            <a-select default-value="COUPANG" style="width: 100%">
+            <a-select
+              default-value="COUPANG"
+              style="width: 100%"
+              v-model="store"
+            >
               <a-select-option value="NAVER">스토어팜</a-select-option>
               <a-select-option value="COUPANG">쿠팡</a-select-option>
             </a-select>
@@ -17,26 +21,6 @@
           </a-col>
           <a-col span="18">
             <a-input style="width: 100%;" v-model="productUrl"></a-input>
-          </a-col>
-        </a-row>
-        <a-row align="middle" type="flex" style="margin-bottom: 16px;">
-          <a-col span="6">
-            상품 ID(자동추출)
-          </a-col>
-          <a-col span="18">
-            <template v-if="isValidUrl">
-              <a-tag color="green">
-                파싱성공
-              </a-tag>
-              <a-tag>
-                {{ productId }}
-              </a-tag>
-            </template>
-            <template v-else>
-              <a-tag color="red">
-                파싱실패
-              </a-tag>
-            </template>
           </a-col>
         </a-row>
         <a-row align="middle" type="flex" style="margin-bottom: 16px;">
@@ -66,7 +50,7 @@
             </a-tooltip>
             <a-button
               type="primary"
-              :disabled="!isValidUrl || keywords.length === 0"
+              :disabled="keywords.length === 0"
               @click="handleSearchClick"
               >검색하기</a-button
             >
@@ -76,9 +60,24 @@
     </a-row>
     <!-- Search Results -->
     <a-card title="검색 결과">
-      <a-table :columns="columns" :dataSource="dataSource"></a-table>
+      <a-table :columns="columns" :dataSource="dataSource" :loading="loading">
+        <span slot="actions" slot-scope="keyword">
+          <a-button
+            :key="keyword.keyword"
+            @click="navigateToKeywordInsights(keyword.keyword)"
+          >
+            키워드 인사이트 보기</a-button
+          >
+          <a-button
+            @click="
+              store === 'NAVER' ? searchNaver(keyword.keyword) : searchCoupang(keyword.keyword)
+            "
+            >검색결과 보기</a-button
+          >
+        </span>
+      </a-table>
     </a-card>
-    <a-card>
+    <!-- <a-card>
       <a-row style="margin-bottom: 16px;">
         <a-input-group compact>
           <a-input style="width: 20%" placeholder="스토어명"></a-input>
@@ -108,23 +107,32 @@
       <a-row>
         <a-table> </a-table>
       </a-row>
-    </a-card>
+    </a-card> -->
   </MainLayout>
 </template>
 
 <script>
 import MainLayout from "../layouts/MainLayout.vue";
-import { parseCoupangItemId } from "../utils/url";
-import { fetchProductRankWithinKeywordsCoupang } from "../fetchers/index";
+import {
+  fetchProductRankWithinKeywordsCoupang,
+  fetchProductRankWithinKeywordsNaver,
+} from "../fetchers/index";
 
 const columns = [
   { dataIndex: "keyword", key: "keyword", title: "키워드" },
   {
-    dataIndex: "rank",
+    // dataIndex: "rank",
     key: "rank",
     title: "순위",
     customRender(text, record) {
-      return text === -1 ? "100+" : text;
+      return record.product.rank === -1 ? "100+" : record.product.rank;
+    },
+  },
+  {
+    key: "actions",
+    title: "액션",
+    scopedSlots: {
+      customRender: "actions",
     },
   },
 ];
@@ -137,59 +145,72 @@ export default {
   data() {
     return {
       columns,
-      current: ["1"],
-      // productUrl: "",
-      productUrl:
-        "https://www.coupang.com/vp/products/170864974?itemId=488771624&vendorItemId=4235099705&sourceType=srp_product_ads&clickEventId=da71efc4-7f34-4aeb-bfd0-e6b17a5e358c&korePlacement=15&koreSubPlacement=5&q=수분에센스&itemsCount=36&searchId=7f144ea42e9f4cb083e3209b900910af&rank=4&isAddedCart=",
+      productUrl: "",
       store: "COUPANG",
-      // keywords: [],
-      keywords: [
-        "수분에센스",
-        "에센스추천",
-        "촉촉한에센스",
-        "피부붉은기",
-        "얼굴붉은기",
-      ],
-      productRanks: {},
+      keywords: [],
+      coupangProducts: {},
+      naverProducts: {},
+      loading: false,
     };
   },
   mounted() {},
   methods: {
+    navigateToKeywordInsights(keyword) {
+      let routeUrl = this.$router.resolve({
+        path: "/features/category",
+        query: { keyword },
+      });
+      window.open(routeUrl.href, "_blank");
+    },
+    searchCoupang(keyword) {
+      window.open(`https://www.coupang.com/np/search?q=${keyword}`, "_blank");
+    },
+    searchNaver(keyword) {
+      window.open(`https://search.shopping.naver.com/search/all?query=${keyword}`, "_blank");
+    },
     async handleSearchClick() {
-      const productRanks = await fetchProductRankWithinKeywordsCoupang(
-        this.keywords,
-        this.productId
-      );
-      this.productRanks = productRanks;
+      this.loading = true;
+      if (this.store === "COUPANG") {
+        const coupangProducts = await fetchProductRankWithinKeywordsCoupang(
+          this.keywords,
+          this.productUrl
+        );
+        this.coupangProducts = coupangProducts;
+      } else if (this.store === "NAVER") {
+        const naverProducts = await fetchProductRankWithinKeywordsNaver(
+          this.keywords,
+          this.productUrl
+        );
+        this.naverProducts = naverProducts;
+      }
+      this.loading = false;
     },
   },
   computed: {
     dataSource() {
       let arr = [];
-      for (let keyword in this.productRanks) {
-        arr.push({ keyword, rank: this.productRanks[keyword] });
+      /*
+        "에센스": {
+          "product": {
+            "id": "170864974",
+            "name": "에이플비 비폴렌 프로폴리스 앰플 세럼, 50ml, 1개"
+          },
+          "rank": 39
+        }
+      */
+      if (this.store === "COUPANG") {
+        for (let keyword in this.coupangProducts) {
+          const product = this.coupangProducts[keyword];
+          arr.push({ keyword, product, key: keyword });
+        }
+      } else if (this.store === "NAVER") {
+        for (let keyword in this.naverProducts) {
+          const product = this.naverProducts[keyword];
+          arr.push({ keyword, product, key: keyword });
+        }
       }
+
       return arr;
-    },
-    productId() {
-      switch (this.store) {
-        case "COUPANG":
-          return parseCoupangItemId(this.productUrl);
-        case "NAVER":
-          return 1;
-        default:
-          return 1;
-      }
-    },
-    isValidUrl() {
-      switch (this.store) {
-        case "COUPANG":
-          return this.productId !== -1;
-        case "NAVER":
-          return false;
-        default:
-          return false;
-      }
     },
   },
 };

@@ -8,6 +8,7 @@
         placeholder="검색어를 입력하세요"
         size="large"
         enter-button
+        @search="navigateToKeywordInsights"
       ></a-input-search>
     </div>
     <ul class="features">
@@ -41,6 +42,16 @@ export default {
     return {};
   },
   mounted() {},
+  methods: {
+    navigateToKeywordInsights(keyword) {
+      let routeUrl = this.$router.resolve({
+        path: "/features/category",
+        query: { keyword },
+      });
+      // window.open(routeUrl.href, "_blank");
+      window.location.href = routeUrl.href;
+    },
+  },
 };
 </script>
 

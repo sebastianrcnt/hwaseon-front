@@ -45,6 +45,14 @@
           >
           </a-input>
         </span>
+        <span slot="keywordInsight" slot-scope="post">
+          <a-button
+            :key="post.logNo"
+            @click="navigateToKeywordInsights(post.bestHashTag)"
+          >
+            키워드 인사이트 보기</a-button
+          >
+        </span>
       </a-table>
     </a-card>
   </MainLayout>
@@ -81,6 +89,13 @@ const columns = [
     dataIndex: "searchRank",
     title: "검색순위",
   },
+  {
+    key: "keywordInsight",
+    title: "액션",
+    scopedSlots: {
+      customRender: "keywordInsight",
+    },
+  },
 ];
 
 export default {
@@ -100,6 +115,13 @@ export default {
   computed: {},
   methods: {
     getBestHashTag,
+    navigateToKeywordInsights(keyword) {
+      let routeUrl = this.$router.resolve({
+        path: "/features/category",
+        query: { keyword },
+      });
+      window.open(routeUrl.href, "_blank");
+    },
     handleSearchClick() {
       this.loading = true;
       this.$store
