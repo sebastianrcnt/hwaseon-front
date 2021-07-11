@@ -2,7 +2,8 @@ import axios from "axios";
 export const ApiClient = axios.create({
   // baseURL: process.env.API_URL,
   // baseURL: "http://ec2-3-35-209-96.ap-northeast-2.compute.amazonaws.com:5000/",
-  baseURL: "http://localhost:5000/",
+  baseURL: "http://ec2-3-35-209-188.ap-northeast-2.compute.amazonaws.com:5000/"
+  // baseURL: "http://localhost:5000/",
 });
 
 const extractData = (res) => res.data;
