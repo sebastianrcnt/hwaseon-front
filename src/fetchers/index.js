@@ -2,7 +2,8 @@ import axios from "axios";
 export const ApiClient = axios.create({
   // baseURL: process.env.API_URL,
   // baseURL: "http://ec2-3-35-209-96.ap-northeast-2.compute.amazonaws.com:5000/",
-  baseURL: "http://ec2-3-35-209-188.ap-northeast-2.compute.amazonaws.com:5000/"
+  // baseURL: "http://ec2-3-35-209-188.ap-northeast-2.compute.amazonaws.com:5000/",
+  baseURL: "http://ec2-52-79-235-31.ap-northeast-2.compute.amazonaws.com:5000"
   // baseURL: "http://localhost:5000/",
 });
 
@@ -80,3 +81,9 @@ export const fetchBlogPostSearchRank = (keyword, postId) =>
     "api/v1/keyword-services/get-blog-post-naver-main-search-rank",
     { params: { keyword, postId } }
   ).then(extractData);
+
+export const fetchProductRankWithinKeywordsCoupang = (keywords, productId) =>
+  ApiClient.post("/api/v1/product-services/get-product-rank-within-keywords/coupang", {
+    keywords,
+    productId,
+  }).then(extractData);
