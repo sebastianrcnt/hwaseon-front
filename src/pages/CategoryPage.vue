@@ -522,6 +522,8 @@ export default {
   methods: {
     handleSearch() {
       this.$store.dispatch("keywordStatisticsService/search", this.keyword);
+      this.$store.dispatch("naverShoppingProductsService/fetch", this.keyword);
+      this.keyword2 = this.keyword;
     },
     async setCategoryShoppingTrendingKeywords() {
       this.isCategoryShoppingTrendingKeywordsReady = false;
@@ -575,7 +577,6 @@ export default {
       this.setCategoryShoppingTrendingKeywords();
     },
     handleSearchNaverShoppingProductsSearch() {
-      console.log({ keyword2: this.keyword2 });
       this.$store.dispatch("naverShoppingProductsService/fetch", this.keyword2);
     },
     onChartTypeChange(event) {

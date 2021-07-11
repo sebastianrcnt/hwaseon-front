@@ -10,27 +10,78 @@
             <a-input
               style="width: 100%;"
               placeholder="ex) dotoree0103"
+              v-model="blogId"
             ></a-input>
           </a-col>
         </a-row>
         <a-row align="middle" type="flex" justify="end">
           <a-space>
-            <a-button>키워드 자동 생성</a-button>
-            <a-button>View 순위 확인</a-button>
-            <a-button type="primary">검색하기</a-button>
+            <a-button @click="handleKeywordAutoGenerate"
+              >키워드 자동 생성</a-button
+            >
+            <a-button @click="handleUpdateSearchRanks">View 순위 확인</a-button>
+            <a-button type="primary" @click="handleSearchClick"
+              >검색하기</a-button
+            >
           </a-space>
         </a-row>
       </a-card>
     </a-row>
     <!-- Search Results -->
     <a-card title="검색 결과">
-      <a-table></a-table>
+      <a-table :columns="columns" :dataSource="dataSource" :loading="loading">
+        <span slot="titleWithInspectMessage" slot-scope="title, post">
+          <a
+            :key="post.logNo"
+            :href="`https://blog.naver.com/${post.blogId}/${post.logNo}`"
+            >{{ title }}</a
+          >
+        </span>
+        <span slot="hashTags" slot-scope="post">
+          <a-input
+            @keydown="handleHashTagChange($event, post.logNo)"
+            @keyup="handleHashTagChange($event, post.logNo)"
+            :value="post.bestHashTag"
+          >
+          </a-input>
+        </span>
+      </a-table>
     </a-card>
   </MainLayout>
 </template>
 
 <script>
 import MainLayout from "../layouts/MainLayout.vue";
+import { getBestHashTag } from "../utils/getBestHashTag";
+
+const columns = [
+  {
+    key: "titleWithInspectMessage",
+    dataIndex: "titleWithInspectMessage",
+    title: "제목",
+    scopedSlots: {
+      customRender: "titleWithInspectMessage",
+    },
+  },
+  {
+    title: "View 순위",
+    customRender(text, record, index) {
+      return index + 1;
+    },
+  },
+  {
+    key: "hashTags",
+    title: "키워드",
+    scopedSlots: {
+      customRender: "hashTags",
+    },
+  },
+  {
+    key: "searchRank",
+    dataIndex: "searchRank",
+    title: "검색순위",
+  },
+];
 
 export default {
   name: "BlogSEOPage",
@@ -38,39 +89,53 @@ export default {
     MainLayout,
   },
   data() {
-    return {};
+    return {
+      loading: false,
+      blogId: "",
+      columns,
+      dataSource: [],
+    };
   },
-  mounted() {
-    this.fillData();
-  },
+  mounted() {},
+  computed: {},
   methods: {
-    onChartTypeChange(event) {
-      this.chartType = event.target.value;
+    getBestHashTag,
+    handleSearchClick() {
+      this.loading = true;
+      this.$store
+        .dispatch("blogService/fetch", this.blogId)
+        .then(() => {
+          this.setDataSource();
+        })
+        .finally(() => {
+          this.loading = false;
+        });
     },
-    onChartPeriodChange(event) {
-      this.chartPeriod = event.target.value;
+    handleHashTagChange(event, postId) {
+      console.log(event.target.value, postId);
+      this.$store.commit("blogService/setBestHashTag", {
+        postId,
+        hashTag: event.target.value,
+      });
     },
-    getRandomInt() {
-      return Math.floor(Math.random() * (50 - 5 + 1)) + 5;
+    handleKeywordAutoGenerate() {
+      this.handleSearchClick();
     },
-    fillData() {
-      this.chartData = {
-        labels: [1, 2, 3, 4, 5],
-        datasets: [
-          {
-            label: "Data One",
-            fill: false,
-            tension: 0.1,
-            data: [
-              this.getRandomInt(),
-              this.getRandomInt(),
-              this.getRandomInt(),
-              this.getRandomInt(),
-              this.getRandomInt(),
-            ],
-          },
-        ],
-      };
+    handleUpdateSearchRanks() {
+      this.loading = true;
+      this.$store
+        .dispatch("blogService/updateSearchRanks")
+        .then(() => {
+          this.setDataSource();
+        })
+        .finally(() => {
+          this.loading = false;
+        });
+    },
+    // ...mapState("blogService", ["loading"]),
+    setDataSource() {
+      // todo - change to getter
+      this.dataSource = this.$store.state.blogService.rawPosts;
     },
   },
 };

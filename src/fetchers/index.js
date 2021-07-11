@@ -1,6 +1,7 @@
 import axios from "axios";
 export const ApiClient = axios.create({
   // baseURL: process.env.API_URL,
+  // baseURL: "http://ec2-3-35-209-96.ap-northeast-2.compute.amazonaws.com:5000/",
   baseURL: "http://localhost:5000/",
 });
 
@@ -61,3 +62,20 @@ export const fetchNaverShoppingProducts = (keyword) =>
   ApiClient.get("api/v1/keyword-services/get-naver-shopping-products", {
     params: { keyword },
   }).then(extractData);
+
+// Blog
+export const fetchBlogPosts = (blogId) =>
+  ApiClient.get("api/v1/blog-services/get-blog-posts", {
+    params: { blogId },
+  }).then(extractData);
+
+export const fetchHashTags = (blogId, postId) =>
+  ApiClient.get("api/v1/keyword-services/get-blog-post-hashtags", {
+    params: { blogId, postId },
+  }).then(extractData);
+
+export const fetchBlogPostSearchRank = (keyword, postId) =>
+  ApiClient.get(
+    "api/v1/keyword-services/get-blog-post-naver-main-search-rank",
+    { params: { keyword, postId } }
+  ).then(extractData);
