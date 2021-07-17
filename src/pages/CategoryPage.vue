@@ -36,6 +36,7 @@
                   <a-statistic
                     title="전월대비"
                     :value="searchCountDeltaInPercentage"
+                    :prefix="searchCountDeltaInPercentage > 0 ? '+': ''"
                     suffix="%"
                     :precision="2"
                   />
@@ -71,6 +72,7 @@
                   <a-statistic
                     title="전월대비"
                     :value="publishCountDeltaInPercentage"
+                    :prefix="publishCountDeltaInPercentage > 0 ? '+': ''"
                     :precision="2"
                     suffix="%"
                   />
