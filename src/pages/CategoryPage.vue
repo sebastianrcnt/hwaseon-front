@@ -36,7 +36,7 @@
                   <a-statistic
                     title="전월대비"
                     :value="searchCountDeltaInPercentage"
-                    :prefix="searchCountDeltaInPercentage > 0 ? '+': ''"
+                    :prefix="searchCountDeltaInPercentage > 0 ? '+' : ''"
                     suffix="%"
                     :precision="2"
                   />
@@ -72,7 +72,7 @@
                   <a-statistic
                     title="전월대비"
                     :value="publishCountDeltaInPercentage"
-                    :prefix="publishCountDeltaInPercentage > 0 ? '+': ''"
+                    :prefix="publishCountDeltaInPercentage > 0 ? '+' : ''"
                     :precision="2"
                     suffix="%"
                   />
@@ -287,6 +287,9 @@
           :data-source="naverShoppingProductsDataSource"
           :loading="naverShoppingProductsLoading"
         >
+          <span slot="productName" slot-scope="product">
+            <a target="_blank" :href="product.url">{{ product.productName }}</a>
+          </span>
         </a-table>
       </a-row>
     </a-card>
@@ -410,9 +413,10 @@ const naverShoppingProductsColumns = [
   },
   {
     key: "productName",
-    dataIndex: "productName",
+    // dataIndex: "productName",
     title: "상품명",
     width: "30%",
+    scopedSlots: { customRender: "productName" },
   },
   { key: "mallName", dataIndex: "mallName", title: "스토어명" },
   { key: "price", dataIndex: "price", title: "가격" },
@@ -457,9 +461,9 @@ export default {
     // get all categories
     const topCategories = await fetchNaverCategory(0);
     this.$set(this.categoryOptionsByLevel, 0, topCategories.childList);
-    if (this.$route.query['keyword']) {
-      this.keyword = this.$route.query['keyword'];
-      this.handleSearch()
+    if (this.$route.query["keyword"]) {
+      this.keyword = this.$route.query["keyword"];
+      this.handleSearch();
     }
   },
   computed: {
