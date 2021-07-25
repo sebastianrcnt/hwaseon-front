@@ -25,7 +25,7 @@
         </a-row>
         <a-row align="middle" type="flex" style="margin-bottom: 16px;">
           <a-col span="6">키워드 입력</a-col>
-          <a-col span="18">
+          <a-col span="12">
             <a-tooltip>
               <a-select
                 mode="tags"
