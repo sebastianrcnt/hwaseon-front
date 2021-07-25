@@ -1,6 +1,8 @@
 import moment from "moment";
 import {
   fetchNaverSearchAutocompleteKeywords,
+  fetchNaverShoppingProductCount,
+  fetchProductRankWithinKeywordsCoupang,
   fetchPublishCount,
   fetchRelativeRatio,
   fetchRelKeywordStatistics,
@@ -90,7 +92,6 @@ export const keywordStatisticsService = {
     },
     async fetchRelKeywordStatistics({ commit }, keyword) {
       const data = await fetchRelKeywordStatistics(keyword, moment().month());
-      console.log({ keyword, data });
       commit("set", { key: "relKeywordStatistics", value: data });
     },
     fetchTotalSearchCountRelativeRatio({ commit }, keyword) {
@@ -103,6 +104,24 @@ export const keywordStatisticsService = {
           commit("set", { key: "totalSearchCountRelativeRatio", value: diff });
         })
         .finally(() => {});
+    },
+    async fetchAndSetNaverShoppingProductCount({commit, state}, targetKeyword) {
+      let newKeywords = state.relKeywordStatistics.keywords.map(async keyword => {
+        if (keyword.relKeyword === targetKeyword.relKeyword) {
+          let productCount = 0;
+          try {
+            productCount = await fetchNaverShoppingProductCount(keyword.relKeyword)
+          } catch (error) {
+            console.log(error)
+          }
+          return {...keyword, productCount}
+        } else {
+          return keyword
+        }
+      })
+
+      newKeywords = await Promise.all(newKeywords)
+      commit("set", {key: 'relKeywordStatistics', value: {...state.relKeywordStatistics, keywords:newKeywords}})
     },
     async fetchPublishCount({ commit }, keyword) {
       const { blog: blogLast, cafe: cafeLast } = await fetchPublishCount(

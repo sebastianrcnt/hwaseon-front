@@ -37,7 +37,6 @@ export const naverShoppingProductsService = {
       commit("start");
       fetchNaverShoppingProducts(keyword)
         .then((products) => {
-          console.log({ products });
           commit("set", products);
         })
         .finally(() => {

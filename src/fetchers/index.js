@@ -1,10 +1,7 @@
 import axios from "axios";
 export const ApiClient = axios.create({
   // baseURL: process.env.API_URL,
-  // baseURL: "http://ec2-3-35-209-96.ap-northeast-2.compute.amazonaws.com:5000/",
-  // baseURL: "http://ec2-3-35-209-188.ap-northeast-2.compute.amazonaws.com:5000/",
   baseURL: "http://ec2-52-79-235-31.ap-northeast-2.compute.amazonaws.com:5000",
-  // baseURL: "http://localhost:5000/",
 });
 
 const extractData = (res) => res.data;
@@ -99,3 +96,13 @@ export const fetchProductRankWithinKeywordsNaver = (keywords, productUrl) =>
       productUrl,
     }
   ).then(extractData);
+
+export const fetchNaverSearchRelatedKeywords = (keyword) =>
+  ApiClient.get("/api/v1/keyword-services/naver-search-related", {
+    keyword,
+  }).then(extractData);
+
+export const fetchNaverShoppingProductCount = (keyword) =>
+  ApiClient.get("/api/v1/keyword-services/naver-shopping-product-count", {
+    params: { keyword },
+  }).then(extractData);

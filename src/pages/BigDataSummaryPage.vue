@@ -100,7 +100,7 @@ const columns = [
     title: "MO 광고클릭",
     sorter: (a, b) => b.monthlyAveMobileClkCnt - a.monthlyAveMobileClkCnt,
     sortDirections: ["ascend", "descend"],
-    customRender(text, record, index) {
+    customRender(text, record) {
       return `${text} (${record.monthlyAveMobileCtr})`;
     },
   },
@@ -110,14 +110,14 @@ const columns = [
     title: "PC 광고클릭",
     sorter: (a, b) => b.monthlyAvePcClkCnt - a.monthlyAvePcClkCnt,
     sortDirections: ["ascend", "descend"],
-    customRender(text, record, index) {
+    customRender(text, record) {
       return `${text} (${record.monthlyAvePcCtr})`;
     },
   },
   {
     key: "compIdx",
     dataIndex: "compIdx",
-    title: "경쟁률",
+    title: "상품수",
     scopedSlots: {
       customRender: "compIdx",
     },

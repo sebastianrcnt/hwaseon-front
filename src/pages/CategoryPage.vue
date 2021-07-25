@@ -155,19 +155,16 @@
         :data-source="relKeywordStatisticsDataSource"
         :loading="loading"
       >
-        <span slot="compIdx" slot-scope="compIdx">
-          <a-tag
-            :color="
-              compIdx === '높음'
-                ? 'red'
-                : compIdx === '중간'
-                ? 'orange'
-                : compIdx === '낮음'
-                ? 'green'
-                : ''
-            "
-            >{{ compIdx }}</a-tag
+        <span slot="keyword" slot-scope="keyword">
+          <a-button
+            v-if="keyword.productCount === undefined"
+            @click="handleRelKeywordProductCountCheckClick(keyword)"
           >
+            확인하기
+          </a-button>
+          <a-button v-else>
+            {{ keyword.productCount }}
+          </a-button>
         </span>
         <span slot="source" slot-scope="source">
           <a-tag v-if="source.relkeyword">
@@ -347,7 +344,7 @@ const searchResultColumns = [
   },
   {
     title: "Total",
-    customRender(text, record, index) {
+    customRender(text, record) {
       return record.monthlyPcQcCnt + record.monthlyMobileQcCnt;
     },
     sorter: (a, b) => b.monthlyPcQcCnt - a.monthlyPcQcCnt,
@@ -359,7 +356,7 @@ const searchResultColumns = [
     title: "MO 광고클릭",
     sorter: (a, b) => b.monthlyAveMobileClkCnt - a.monthlyAveMobileClkCnt,
     sortDirections: ["ascend", "descend"],
-    customRender(text, record, index) {
+    customRender(text, record) {
       return `${text} (${record.monthlyAveMobileCtr})`;
     },
   },
@@ -369,24 +366,16 @@ const searchResultColumns = [
     title: "PC 광고클릭",
     sorter: (a, b) => b.monthlyAvePcClkCnt - a.monthlyAvePcClkCnt,
     sortDirections: ["ascend", "descend"],
-    customRender(text, record, index) {
+    customRender(text, record) {
       return `${text} (${record.monthlyAvePcCtr})`;
     },
   },
   {
-    key: "compIdx",
-    dataIndex: "compIdx",
-    title: "경쟁률",
+    key: "productCount",
+    title: "상품수",
     scopedSlots: {
-      customRender: "compIdx",
+      customRender: "keyword",
     },
-    sorter: (a, b) => {
-      const map = { 높음: 3, 중간: 2, 낮음: 1 };
-      const aCompIdx = map[a.compIdx] || 0;
-      const bCompIdx = map[b.compIdx] || 0;
-      return aCompIdx - bCompIdx;
-    },
-    sortDirections: ["ascend", "descend"],
   },
 ];
 
@@ -585,6 +574,12 @@ export default {
     },
     async handleCategoryShoppingTrendingKeywordsSearchClick() {
       this.setCategoryShoppingTrendingKeywords();
+    },
+    handleRelKeywordProductCountCheckClick(keyword) {
+      this.$store.dispatch(
+        "keywordStatisticsService/fetchAndSetNaverShoppingProductCount",
+        keyword
+      );
     },
     handleSearchNaverShoppingProductsSearch() {
       this.$store.dispatch("naverShoppingProductsService/fetch", this.keyword2);
