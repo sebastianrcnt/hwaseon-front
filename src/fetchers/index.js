@@ -99,10 +99,16 @@ export const fetchProductRankWithinKeywordsNaver = (keywords, productUrl) =>
 
 export const fetchNaverSearchRelatedKeywords = (keyword) =>
   ApiClient.get("/api/v1/keyword-services/naver-search-related", {
-    keyword,
+    params: { keyword },
   }).then(extractData);
 
 export const fetchNaverShoppingProductCount = (keyword) =>
   ApiClient.get("/api/v1/keyword-services/naver-shopping-product-count", {
     params: { keyword },
   }).then(extractData);
+
+export const fetchNaverShoppingKeywordCategory = (keyword) =>
+  ApiClient.get(
+    "/api/v1/category-services/get-naver-shopping-keyword-category",
+    { params: { keyword } }
+  ).then(extractData);

@@ -1,8 +1,8 @@
 import moment from "moment";
 import {
   fetchNaverSearchAutocompleteKeywords,
+  fetchNaverSearchRelatedKeywords,
   fetchNaverShoppingProductCount,
-  fetchProductRankWithinKeywordsCoupang,
   fetchPublishCount,
   fetchRelativeRatio,
   fetchRelKeywordStatistics,
@@ -20,6 +20,7 @@ export const keywordStatisticsService = {
       // autocomplete
       naverSearchAutocompleteKeywords: [],
       naverShoppingAutocompleteKeywords: [],
+      naverSearchRelatedKeywords: [],
       // publish count
       lastBlogPublishCount: 0,
       lastCafePublishCount: 0,
@@ -148,6 +149,8 @@ export const keywordStatisticsService = {
       const naverShoppingAutocompleteKeywords = await fetchNaverSearchAutocompleteKeywords(
         keyword
       );
+      const naverSearchRelatedKeywords = await fetchNaverSearchRelatedKeywords(keyword)
+
       commit(
         "set",
         "naverSearchAutocompleteKeywords",
@@ -158,6 +161,11 @@ export const keywordStatisticsService = {
         "naverShoppingAutocompleteKeywords",
         naverShoppingAutocompleteKeywords
       );
+      commit(
+        'set',
+        'naverSearchRelatedKeywords',
+        naverSearchRelatedKeywords
+      )
     },
     async fetchSectionOrder({ commit }, keyword) {
       const { mobile, pc } = await fetchSearchSectionOrder(keyword);

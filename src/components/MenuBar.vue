@@ -9,7 +9,10 @@
       키워드 분석/카테고리 현황
     </a-menu-item>
     <a-menu-item key="/features/tracking">
-      제품트래킹/키워드별 예상 판매량
+      제품트래킹
+    </a-menu-item>
+    <a-menu-item key="/features/sales">
+      키워드별 예상 판매량
     </a-menu-item>
     <a-menu-item key="/features/summary">
       대량키워드 요약

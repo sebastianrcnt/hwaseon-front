@@ -167,13 +167,13 @@
           </a-button>
         </span>
         <span slot="source" slot-scope="source">
-          <a-tag v-if="source.relkeyword">
+          <a-tag v-if="source.nsearchrel">
             연검
           </a-tag>
-          <a-tag v-if="source.nsearch" color="#2DB400">
+          <a-tag v-if="source.nsearchautocompl" color="#2DB400">
             N자
           </a-tag>
-          <a-tag v-if="source.nshopping" color="#87d068">
+          <a-tag v-if="source.nshoppingautocompl" color="#87d068">
             N쇼
           </a-tag>
         </span>
@@ -265,31 +265,6 @@
         </a-table>
       </a-row>
     </a-card>
-    <a-card title="해당 키워드 N쇼핑 판매량(NPay 기준 | 최근 7일간)">
-      <a-row style="margin-bottom: 16px;">
-        <a-input-group compact>
-          <a-input-search
-            style="width: 30%"
-            placeholder="키워드 (ex) 탈모샴푸"
-            enter-button="검색하기"
-            v-model="keyword2"
-            @search="handleSearchNaverShoppingProductsSearch"
-          >
-          </a-input-search>
-        </a-input-group>
-      </a-row>
-      <a-row>
-        <a-table
-          :columns="naverShoppingProductsColumns"
-          :data-source="naverShoppingProductsDataSource"
-          :loading="naverShoppingProductsLoading"
-        >
-          <span slot="productName" slot-scope="product">
-            <a target="_blank" :href="product.url">{{ product.productName }}</a>
-          </span>
-        </a-table>
-      </a-row>
-    </a-card>
     <!-- RESULT -->
   </MainLayout>
 </template>
@@ -300,6 +275,7 @@ import LineChart from "../components/LineChart";
 import {
   fetchCategoryShoppingTrendingKeywords,
   fetchNaverCategory,
+  fetchNaverShoppingKeywordCategory,
 } from "../fetchers";
 
 import { mapGetters, mapState } from "vuex";
@@ -319,9 +295,9 @@ const searchResultColumns = [
     title: "소스",
     scopedSlots: { customRender: "source" },
     filters: [
-      { text: "연검", value: "relkeyword" },
-      { text: "N자", value: "nsearch" },
-      { text: "N쇼", value: "nshopping" },
+      { text: "연검", value: "nsearchrel" },
+      { text: "N자", value: "nsearchautocompl" },
+      { text: "N쇼", value: "nshoppingautocompl" },
     ],
     filterMultiple: true,
     onFilter: (value, record) => {
@@ -390,28 +366,6 @@ const categoryShoppingTrendingKeywordsColumns = [
   },
 ];
 
-const naverShoppingProductsColumns = [
-  { key: "totalRank", dataIndex: "totalRank", title: "순위" },
-  {
-    key: "isAd",
-    dataIndex: "isAd",
-    title: "광고여부",
-    customRender(text) {
-      return text ? "예" : "아니오";
-    },
-  },
-  {
-    key: "productName",
-    // dataIndex: "productName",
-    title: "상품명",
-    width: "30%",
-    scopedSlots: { customRender: "productName" },
-  },
-  { key: "mallName", dataIndex: "mallName", title: "스토어명" },
-  { key: "price", dataIndex: "price", title: "가격" },
-  { key: "deliveryPrice", dataIndex: "deliveryPrice", title: "배달비" },
-  { key: "salescounts", dataIndex: "salescounts", title: "판매량" },
-];
 
 export default {
   name: "MainPage",
@@ -438,11 +392,8 @@ export default {
       categoryShoppingTrendingKeywordsColumns,
       categoryShoppingTrendingKeywords: [],
       isCategoryShoppingTrendingKeywordsReady: true,
-      // keyword2
-      keyword2: "",
       // columns
       searchResultColumns,
-      naverShoppingProductsColumns,
     };
   },
   async mounted() {
@@ -474,17 +425,19 @@ export default {
     relKeywordStatisticsDataSource() {
       return this.relKeywordStatistics.keywords?.map((keywordData, index) => {
         // populate sources
-        const relkeyword = true;
-        const nsearch = this.naverSearchAutocompleteKeywords.includes(
+        const nsearchrel = this.naverSearchRelatedKeywords.includes(
+          keywordData.relkeyword
+        );
+        const nsearchautocompl = this.naverSearchAutocompleteKeywords.includes(
           keywordData.relKeyword
         );
-        const nshopping = this.naverShoppingAutocompleteKeywords.includes(
+        const nshoppingautocompl = this.naverShoppingAutocompleteKeywords.includes(
           keywordData.relKeyword
         );
         return {
           key: index,
           ...keywordData,
-          source: { relkeyword, nsearch, nshopping },
+          source: { nsearchrel, nsearchautocompl, nshoppingautocompl },
         };
       });
     },
@@ -493,6 +446,7 @@ export default {
       "loading",
       "relKeywordStatistics",
       "naverSearchAutocompleteKeywords",
+      "naverSearchRelatedKeywords",
       "naverShoppingAutocompleteKeywords",
       "lastBlogPublishCount",
       "lastCafePublishCount",
@@ -511,18 +465,21 @@ export default {
       "publishCountDeltaInPercentage",
       "searchCountDeltaInPercentage",
     ]),
-    ...mapState("naverShoppingProductsService", {
-      naverShoppingProductsLoading: (state) => state.loading,
-    }),
-    ...mapGetters("naverShoppingProductsService", [
-      "naverShoppingProductsDataSource",
-    ]),
+
   },
   methods: {
     handleSearch() {
       this.$store.dispatch("keywordStatisticsService/search", this.keyword);
       this.$store.dispatch("naverShoppingProductsService/fetch", this.keyword);
-      this.keyword2 = this.keyword;
+      fetchNaverShoppingKeywordCategory(this.keyword).then(async categories => {
+        const promises = []
+        for (let i = 0; i < categories.length; i++) {
+          promises.push(this.handleCategoryChange(i, categories[i]))
+        }
+
+        await Promise.all(promises)
+        this.handleCategoryShoppingTrendingKeywordsSearchClick();
+      })
     },
     async setCategoryShoppingTrendingKeywords() {
       this.isCategoryShoppingTrendingKeywordsReady = false;
@@ -581,9 +538,7 @@ export default {
         keyword
       );
     },
-    handleSearchNaverShoppingProductsSearch() {
-      this.$store.dispatch("naverShoppingProductsService/fetch", this.keyword2);
-    },
+    
     onChartTypeChange(event) {
       this.chartType = event.target.value;
     },
