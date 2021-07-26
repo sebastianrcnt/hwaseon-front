@@ -130,11 +130,14 @@
         </a-col>
         <a-col span="6">
           <a-radio-group v-model="chartPeriod" @change="onChartPeriodChange">
-            <a-radio-button value="month">
+            <a-radio-button value="date">
               1개월
             </a-radio-button>
-            <a-radio-button value="year">
+            <a-radio-button value="week">
               1년
+            </a-radio-button>
+            <a-radio-button value="month">
+              3년
             </a-radio-button>
           </a-radio-group>
         </a-col>
@@ -276,6 +279,7 @@ import {
   fetchCategoryShoppingTrendingKeywords,
   fetchNaverCategory,
   fetchNaverShoppingKeywordCategory,
+  fetchKeywordGraphStatistics,
 } from "../fetchers";
 
 import { mapGetters, mapState } from "vuex";
@@ -366,7 +370,6 @@ const categoryShoppingTrendingKeywordsColumns = [
   },
 ];
 
-
 export default {
   name: "MainPage",
   components: {
@@ -394,6 +397,7 @@ export default {
       isCategoryShoppingTrendingKeywordsReady: true,
       // columns
       searchResultColumns,
+      keywordGraphStatistics: null,
     };
   },
   async mounted() {
@@ -465,21 +469,63 @@ export default {
       "publishCountDeltaInPercentage",
       "searchCountDeltaInPercentage",
     ]),
-
   },
   methods: {
+    computeGraphData() {
+      const periods = this.keywordGraphStatistics["clickTrend"].map(
+        (val) => val.period
+      );
+      const values = this.keywordGraphStatistics["clickTrend"].map(
+        (val) => val.value
+      );
+
+      return {
+        labels: periods,
+        datasets: [
+          {
+            label: this.keyword,
+            fill: false,
+            xAxisId: "period",
+            yAxisId: "value",
+            data: values,
+          },
+        ],
+      };
+    },
     handleSearch() {
       this.$store.dispatch("keywordStatisticsService/search", this.keyword);
       this.$store.dispatch("naverShoppingProductsService/fetch", this.keyword);
-      fetchNaverShoppingKeywordCategory(this.keyword).then(async categories => {
-        const promises = []
-        for (let i = 0; i < categories.length; i++) {
-          promises.push(this.handleCategoryChange(i, categories[i]))
-        }
+      fetchNaverShoppingKeywordCategory(this.keyword)
+        .then(async (categories) => {
+          const promises = [];
+          for (let i = 0; i < categories.length; i++) {
+            promises.push(this.handleCategoryChange(i, categories[i]));
+          }
 
-        await Promise.all(promises)
-        this.handleCategoryShoppingTrendingKeywordsSearchClick();
-      })
+          await Promise.all(promises);
+          this.handleCategoryShoppingTrendingKeywordsSearchClick();
+        })
+        .then(async () => {
+          await this.setKeywordGraphStatistics();
+          this.fillData(this.computeGraphData());
+        });
+    },
+    async setKeywordGraphStatistics() {
+      if (this.selectedCategoriesByLevel[0] === "unset") {
+        throw new Error("Categories Not Set!!");
+      } else {
+        console.log(this.chartPeriod);
+        const statistics = await fetchKeywordGraphStatistics(
+          this.keyword,
+          this.selectedCategoriesByLevel[0],
+          "2020-01-01",
+          "2021-01-01",
+          this.chartPeriod
+        );
+
+        console.log(statistics);
+        this.keywordGraphStatistics = statistics;
+      }
     },
     async setCategoryShoppingTrendingKeywords() {
       this.isCategoryShoppingTrendingKeywordsReady = false;
@@ -538,34 +584,17 @@ export default {
         keyword
       );
     },
-    
+
     onChartTypeChange(event) {
       this.chartType = event.target.value;
     },
     onChartPeriodChange(event) {
-      this.chartPeriod = event.target.value;
+      const chartPeriod = event.target.value;
+      this.chartPeriod = chartPeriod;
+      this.setKeywordGraphStatistics();
     },
-    getRandomInt() {
-      return Math.floor(Math.random() * (50 - 5 + 1)) + 5;
-    },
-    fillData() {
-      this.chartData = {
-        labels: [1, 2, 3, 4, 5],
-        datasets: [
-          {
-            label: "Data One",
-            fill: false,
-            tension: 0.1,
-            data: [
-              this.getRandomInt(),
-              this.getRandomInt(),
-              this.getRandomInt(),
-              this.getRandomInt(),
-              this.getRandomInt(),
-            ],
-          },
-        ],
-      };
+    fillData(data) {
+      this.chartData = data;
     },
   },
 };

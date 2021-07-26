@@ -112,3 +112,14 @@ export const fetchNaverShoppingKeywordCategory = (keyword) =>
     "/api/v1/category-services/get-naver-shopping-keyword-category",
     { params: { keyword } }
   ).then(extractData);
+
+export const fetchKeywordGraphStatistics = (
+  keyword,
+  categoryId,
+  startDate,
+  endDate,
+  timeUnit
+) =>
+  ApiClient.get("/api/v1/keyword-services/fetch_keyword_graph_statistics", {
+    params: { categoryId, startDate, timeUnit, keyword, endDate },
+  }).then(extractData);
