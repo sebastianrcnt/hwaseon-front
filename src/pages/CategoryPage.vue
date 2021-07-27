@@ -126,6 +126,9 @@
             <a-radio-button value="time">
               시간별
             </a-radio-button>
+            <a-radio-button value="sex">
+              성별
+            </a-radio-button>
           </a-radio-group>
         </a-col>
         <a-col span="6">
@@ -281,9 +284,15 @@ import {
   fetchNaverShoppingKeywordCategory,
   fetchKeywordGraphStatistics,
 } from "../fetchers";
-
 import { mapGetters, mapState } from "vuex";
-import { last2Month, lastMonth, today } from "../utils/time";
+import {
+  last2Month,
+  last3Years,
+  lastMonth,
+  lastYear,
+  today,
+} from "../utils/time";
+import moment from "moment";
 
 // Columns
 // Search Result
@@ -381,6 +390,7 @@ export default {
       // Chart
       chartData: null,
       chartOptions: {
+        type: 'bar',
         responsive: true,
         maintainAspectRatio: false,
       },
@@ -472,22 +482,35 @@ export default {
   },
   methods: {
     computeGraphData() {
-      const periods = this.keywordGraphStatistics["clickTrend"].map(
-        (val) => val.period
-      );
-      const values = this.keywordGraphStatistics["clickTrend"].map(
-        (val) => val.value
-      );
+      let x, y;
+      switch (this.chartType) {
+        case "time":
+          x = this.keywordGraphStatistics["clickTrend"].map(
+            (val) => val.period
+          );
+          y = this.keywordGraphStatistics["clickTrend"].map((val) => val.value);
+          break;
+        case "age":
+          x = this.keywordGraphStatistics["ageRate"].map((val) => val.label);
+          y = this.keywordGraphStatistics["ageRate"].map((val) => val.ratio);
+          break;
+        case "sex":
+          x = this.keywordGraphStatistics["genderRate"].map((val) => val.label);
+          y = this.keywordGraphStatistics["genderRate"].map((val) => val.ratio);
+          break;
+        default:
+          throw new Error("invalid chart type" + this.chartType);
+      }
 
       return {
-        labels: periods,
+        labels: x,
         datasets: [
           {
             label: this.keyword,
             fill: false,
             xAxisId: "period",
             yAxisId: "value",
-            data: values,
+            data: y,
           },
         ],
       };
@@ -515,11 +538,28 @@ export default {
         throw new Error("Categories Not Set!!");
       } else {
         console.log(this.chartPeriod);
+
+        let startDate = null;
+        switch (this.chartPeriod) {
+          case "date":
+            startDate = lastMonth();
+            break;
+          case "week":
+            startDate = lastYear();
+            break;
+          case "month":
+            startDate = last3Years();
+            break;
+        }
+
+        const endDate = today();
+
+        console.log(startDate);
         const statistics = await fetchKeywordGraphStatistics(
           this.keyword,
           this.selectedCategoriesByLevel[0],
-          "2020-01-01",
-          "2021-01-01",
+          startDate,
+          endDate,
           this.chartPeriod
         );
 
@@ -586,12 +626,15 @@ export default {
     },
 
     onChartTypeChange(event) {
-      this.chartType = event.target.value;
+      const chartType = event.target.value;
+      this.chartType = chartType;
+      this.fillData(this.computeGraphData());
     },
-    onChartPeriodChange(event) {
+    async onChartPeriodChange(event) {
       const chartPeriod = event.target.value;
       this.chartPeriod = chartPeriod;
-      this.setKeywordGraphStatistics();
+      await this.setKeywordGraphStatistics();
+      this.fillData(this.computeGraphData());
     },
     fillData(data) {
       this.chartData = data;
