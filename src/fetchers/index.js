@@ -1,7 +1,7 @@
 import axios from "axios";
 export const ApiClient = axios.create({
   // baseURL: process.env.API_URL,
-  baseURL: "http://ec2-52-79-235-31.ap-northeast-2.compute.amazonaws.com:5000",
+  baseURL: "http://www.hwaseon2.com:5000",
 });
 
 const extractData = (res) => res.data;
