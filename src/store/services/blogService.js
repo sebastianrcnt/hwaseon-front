@@ -36,7 +36,7 @@ export const blogService = {
       let hashTagPromises = rawPosts.map(async (rawPost, index) => {
         const { blogId, logNo: postId } = rawPost;
         const hashTags = await fetchHashTags(blogId, postId);
-        const bestHashTag = getBestHashTag(hashTags);
+        const bestHashTag = getBestHashTag(hashTags, rawPost.titleWithInspectMessage);
 
         return {
           ...rawPost,
