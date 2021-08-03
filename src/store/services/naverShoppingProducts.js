@@ -43,5 +43,8 @@ export const naverShoppingProductsService = {
           commit("end");
         });
     },
+    clear({ commit }) {
+      commit("reset");
+    },
   },
 };

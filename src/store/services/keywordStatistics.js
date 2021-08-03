@@ -79,7 +79,6 @@ export const keywordStatisticsService = {
         ? 0
         : (state.totalSearchCountRelativeRatio - 1) * 100;
     },
-    
   },
   actions: {
     async search({ dispatch, commit }, keyword) {
@@ -106,23 +105,33 @@ export const keywordStatisticsService = {
         })
         .finally(() => {});
     },
-    async fetchAndSetNaverShoppingProductCount({commit, state}, targetKeyword) {
-      let newKeywords = state.relKeywordStatistics.keywords.map(async keyword => {
-        if (keyword.relKeyword === targetKeyword.relKeyword) {
-          let productCount = 0;
-          try {
-            productCount = await fetchNaverShoppingProductCount(keyword.relKeyword)
-          } catch (error) {
-            console.log(error)
+    async fetchAndSetNaverShoppingProductCount(
+      { commit, state },
+      targetKeyword
+    ) {
+      let newKeywords = state.relKeywordStatistics.keywords.map(
+        async (keyword) => {
+          if (keyword.relKeyword === targetKeyword.relKeyword) {
+            let productCount = 0;
+            try {
+              productCount = await fetchNaverShoppingProductCount(
+                keyword.relKeyword
+              );
+            } catch (error) {
+              console.log(error);
+            }
+            return { ...keyword, productCount };
+          } else {
+            return keyword;
           }
-          return {...keyword, productCount}
-        } else {
-          return keyword
         }
-      })
+      );
 
-      newKeywords = await Promise.all(newKeywords)
-      commit("set", {key: 'relKeywordStatistics', value: {...state.relKeywordStatistics, keywords:newKeywords}})
+      newKeywords = await Promise.all(newKeywords);
+      commit("set", {
+        key: "relKeywordStatistics",
+        value: { ...state.relKeywordStatistics, keywords: newKeywords },
+      });
     },
     async fetchPublishCount({ commit }, keyword) {
       const { blog: blogLast, cafe: cafeLast } = await fetchPublishCount(
@@ -149,23 +158,22 @@ export const keywordStatisticsService = {
       const naverShoppingAutocompleteKeywords = await fetchNaverSearchAutocompleteKeywords(
         keyword
       );
-      const naverSearchRelatedKeywords = await fetchNaverSearchRelatedKeywords(keyword)
+      const naverSearchRelatedKeywords = await fetchNaverSearchRelatedKeywords(
+        keyword
+      );
 
-      commit(
-        "set",
-        "naverSearchAutocompleteKeywords",
-        naverSearchAutocompleteKeywords
-      );
-      commit(
-        "set",
-        "naverShoppingAutocompleteKeywords",
-        naverShoppingAutocompleteKeywords
-      );
-      commit(
-        'set',
-        'naverSearchRelatedKeywords',
-        naverSearchRelatedKeywords
-      )
+      commit("set", {
+        key: "naverSearchAutocompleteKeywords",
+        value: naverSearchAutocompleteKeywords,
+      });
+      commit("set", {
+        key: "naverShoppingAutocompleteKeywords",
+        value: naverShoppingAutocompleteKeywords,
+      });
+      commit("set", {
+        key: "naverSearchRelatedKeywords",
+        value: naverSearchRelatedKeywords,
+      });
     },
     async fetchSectionOrder({ commit }, keyword) {
       const { mobile, pc } = await fetchSearchSectionOrder(keyword);
