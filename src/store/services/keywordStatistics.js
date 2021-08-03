@@ -83,6 +83,7 @@ export const keywordStatisticsService = {
   actions: {
     async search({ dispatch, commit }, keyword) {
       commit("start");
+      keyword = keyword.replace(/ /g, '');
       await dispatch("fetchRelKeywordStatistics", keyword);
       await dispatch("fetchTotalSearchCountRelativeRatio", keyword);
       await dispatch("fetchPublishCount", keyword);
