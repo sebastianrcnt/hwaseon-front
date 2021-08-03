@@ -65,6 +65,9 @@ export default {
       naverShoppingProductsColumns,
     };
   },
+  mounted() {
+    this.clearNaverShoppingProducts();
+  },
   computed: {
     ...mapState("naverShoppingProductsService", {
       naverShoppingProductsLoading: (state) => state.loading,
@@ -76,6 +79,9 @@ export default {
   methods: {
     handleSearchNaverShoppingProductsSearch() {
       this.$store.dispatch("naverShoppingProductsService/fetch", this.keyword2);
+    },
+    clearNaverShoppingProducts() {
+      this.$store.dispatch("naverShoppingProductsService/clear");
     },
   },
 };

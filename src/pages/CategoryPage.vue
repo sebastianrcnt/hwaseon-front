@@ -12,7 +12,7 @@
     <a-spin :spinning="loading">
       <a-row :gutter="10" type="flex">
         <a-col :span="12">
-          <a-row style="margin-bottom: 10px;">
+          <a-row style="margin-bottom: 10px">
             <a-card title="월간 검색수">
               <a-row>
                 <a-col :span="6">
@@ -84,7 +84,7 @@
         <a-col :span="12">
           <a-card
             title="쇼핑&뷰 섹션 위치"
-            style="min-height: 340px; height: 100%;"
+            style="min-height: 340px; height: 100%"
           >
             <a-row>
               <a-col :span="12">
@@ -120,28 +120,16 @@
       <a-row mode="flex">
         <a-col span="6">
           <a-radio-group v-model="chartType" @change="onChartTypeChange">
-            <a-radio-button value="age">
-              연령별
-            </a-radio-button>
-            <a-radio-button value="time">
-              시간별
-            </a-radio-button>
-            <a-radio-button value="sex">
-              성별
-            </a-radio-button>
+            <a-radio-button value="age"> 연령별 </a-radio-button>
+            <a-radio-button value="time"> 시간별 </a-radio-button>
+            <a-radio-button value="sex"> 성별 </a-radio-button>
           </a-radio-group>
         </a-col>
         <a-col span="6">
           <a-radio-group v-model="chartPeriod" @change="onChartPeriodChange">
-            <a-radio-button value="date">
-              1개월
-            </a-radio-button>
-            <a-radio-button value="week">
-              1년
-            </a-radio-button>
-            <a-radio-button value="month">
-              3년
-            </a-radio-button>
+            <a-radio-button value="date"> 1개월 </a-radio-button>
+            <a-radio-button value="week"> 1년 </a-radio-button>
+            <a-radio-button value="month"> 3년 </a-radio-button>
           </a-radio-group>
         </a-col>
       </a-row>
@@ -173,30 +161,22 @@
           </a-button>
         </span>
         <span slot="source" slot-scope="source">
-          <a-tag v-if="source.nsearchrel">
-            연검
-          </a-tag>
-          <a-tag v-if="source.nsearchautocompl" color="#2DB400">
-            N자
-          </a-tag>
-          <a-tag v-if="source.nshoppingautocompl" color="#87d068">
-            N쇼
-          </a-tag>
+          <a-tag v-if="source.nsearchrel"> 연검 </a-tag>
+          <a-tag v-if="source.nsearchautocompl" color="#2DB400"> N자 </a-tag>
+          <a-tag v-if="source.nshoppingautocompl" color="#87d068"> N쇼 </a-tag>
         </span>
       </a-table>
     </a-card>
     <!-- Category Keywords -->
     <a-card title="카테고리별 인기검색어">
-      <a-row style="margin-bottom: 16px;">
+      <a-row style="margin-bottom: 16px">
         <a-select
           class="category-select"
           default-value="unset"
           @change="handleCategoryChange(0, $event)"
           :value="selectedCategoriesByLevel[0]"
         >
-          <a-select-option value="unset">
-            전체 (1분류)
-          </a-select-option>
+          <a-select-option value="unset"> 전체 (1분류) </a-select-option>
           <a-select-option
             v-for="(option, index) in categoryOptionsByLevel[0]"
             :key="index"
@@ -211,9 +191,7 @@
           @change="handleCategoryChange(1, $event)"
           :value="selectedCategoriesByLevel[1]"
         >
-          <a-select-option value="unset">
-            전체 (2분류)
-          </a-select-option>
+          <a-select-option value="unset"> 전체 (2분류) </a-select-option>
           <a-select-option
             v-for="(option, index) in categoryOptionsByLevel[1]"
             :key="index"
@@ -228,9 +206,7 @@
           @change="handleCategoryChange(2, $event)"
           :value="selectedCategoriesByLevel[2]"
         >
-          <a-select-option value="unset">
-            전체 (3분류)
-          </a-select-option>
+          <a-select-option value="unset"> 전체 (3분류) </a-select-option>
           <a-select-option
             v-for="(option, index) in categoryOptionsByLevel[2]"
             :key="index"
@@ -245,9 +221,7 @@
           @change="handleCategoryChange(3, $event)"
           :value="selectedCategoriesByLevel[3]"
         >
-          <a-select-option value="unset">
-            전체 (4분류)
-          </a-select-option>
+          <a-select-option value="unset"> 전체 (4분류) </a-select-option>
           <a-select-option
             v-for="(option, index) in categoryOptionsByLevel[3]"
             :key="index"
@@ -268,6 +242,31 @@
           :columns="categoryShoppingTrendingKeywordsColumns"
           :data-source="categoryShoppingTrendingKeywords"
         >
+        </a-table>
+      </a-row>
+    </a-card>
+        <a-card title="N쇼핑 판매량(NPay 기준 | 최근 7일간)">
+      <a-row style="margin-bottom: 16px;">
+        <a-input-group compact>
+          <a-input-search
+            style="width: 30%"
+            placeholder="키워드 (ex) 탈모샴푸"
+            enter-button="검색하기"
+            v-model="keyword2"
+            @search="handleSearchNaverShoppingProductsSearch"
+          >
+          </a-input-search>
+        </a-input-group>
+      </a-row>
+      <a-row>
+        <a-table
+          :columns="naverShoppingProductsColumns"
+          :data-source="naverShoppingProductsDataSource"
+          :loading="naverShoppingProductsLoading"
+        >
+          <span slot="productName" slot-scope="product">
+            <a target="_blank" :href="product.url">{{ product.productName }}</a>
+          </span>
         </a-table>
       </a-row>
     </a-card>
@@ -379,6 +378,29 @@ const categoryShoppingTrendingKeywordsColumns = [
   },
 ];
 
+const naverShoppingProductsColumns = [
+  { key: "totalRank", dataIndex: "totalRank", title: "순위" },
+  {
+    key: "isAd",
+    dataIndex: "isAd",
+    title: "광고여부",
+    customRender(text) {
+      return text ? "예" : "아니오";
+    },
+  },
+  {
+    key: "productName",
+    // dataIndex: "productName",
+    title: "상품명",
+    width: "30%",
+    scopedSlots: { customRender: "productName" },
+  },
+  { key: "mallName", dataIndex: "mallName", title: "스토어명" },
+  { key: "price", dataIndex: "price", title: "가격" },
+  { key: "deliveryPrice", dataIndex: "deliveryPrice", title: "배달비" },
+  { key: "salescounts", dataIndex: "salescounts", title: "판매량" },
+];
+
 export default {
   name: "MainPage",
   components: {
@@ -388,9 +410,10 @@ export default {
   data() {
     return {
       // Chart
+      naverShoppingProductsColumns,
       chartData: null,
       chartOptions: {
-        type: 'bar',
+        type: "bar",
         responsive: true,
         maintainAspectRatio: false,
       },
@@ -439,15 +462,36 @@ export default {
     relKeywordStatisticsDataSource() {
       return this.relKeywordStatistics.keywords?.map((keywordData, index) => {
         // populate sources
-        const nsearchrel = this.naverSearchRelatedKeywords.includes(
-          keywordData.relkeyword
-        );
-        const nsearchautocompl = this.naverSearchAutocompleteKeywords.includes(
-          keywordData.relKeyword
-        );
-        const nshoppingautocompl = this.naverShoppingAutocompleteKeywords.includes(
-          keywordData.relKeyword
-        );
+        const nsearchrel = this.naverSearchRelatedKeywords
+          .map((keyword) => {
+            const replaced = keyword.replace(/ /g, "");
+            return replaced;
+          })
+          .includes(keywordData.relkeyword);
+        const nsearchautocompl = this.naverSearchAutocompleteKeywords
+          .map((keyword) => keyword.replace(/ /g, ""))
+          .includes(keywordData.relKeyword);
+        const nshoppingautocompl = this.naverShoppingAutocompleteKeywords
+          .map((keyword) => keyword.replace(/ /g, ""))
+          .includes(keywordData.relKeyword);
+
+        if (nsearchrel || nsearchautocompl || nshoppingautocompl) {
+          console.log({
+            keyword: keywordData.relKeyword,
+            nsearchrel,
+            nsearchautocompl,
+            nshoppingautocompl,
+          });
+        }
+
+        // console.log(
+        //   this.naverSearchRelatedKeywords.map((keyword) => {
+        //     // const replaced = keyword.replace(/ /g, "");
+        //     // return replaced;
+        //     return keyword
+        //   })
+        // );
+
         return {
           key: index,
           ...keywordData,
@@ -479,8 +523,17 @@ export default {
       "publishCountDeltaInPercentage",
       "searchCountDeltaInPercentage",
     ]),
+    ...mapState("naverShoppingProductsService", {
+      naverShoppingProductsLoading: (state) => state.loading,
+    }),
+    ...mapGetters("naverShoppingProductsService", [
+      "naverShoppingProductsDataSource",
+    ]),
   },
   methods: {
+    handleSearchNaverShoppingProductsSearch() {
+      this.$store.dispatch("naverShoppingProductsService/fetch", this.keyword2);
+    },
     computeGraphData() {
       let x, y;
       switch (this.chartType) {
