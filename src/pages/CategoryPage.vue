@@ -146,7 +146,7 @@
     <a-card title="검색 결과">
       <a-table
         :columns="searchResultColumns"
-        :data-source="relKeywordStatisticsDataSource"
+        :data-source="getRelKeywordStatisticsDataSource()"
         :loading="loading"
       >
         <span slot="keyword" slot-scope="keyword">
@@ -242,10 +242,14 @@
           :columns="categoryShoppingTrendingKeywordsColumns"
           :data-source="categoryShoppingTrendingKeywords"
         >
+        <span slot="keywordRankDelta" slot-scope="keyword">
+          <a-tag v-if="keyword.rankDelta >= 0" color="green">{{keyword.rankDelta}}</a-tag>
+          <a-tag v-if="keyword.rankDelta < 0" color="red">{{keyword.rankDelta}}</a-tag>
+        </span>
         </a-table>
       </a-row>
     </a-card>
-        <a-card title="N쇼핑 판매량(NPay 기준 | 최근 7일간)">
+    <a-card title="N쇼핑 판매량(NPay 기준 | 최근 7일간)">
       <a-row style="margin-bottom: 16px;">
         <a-input-group compact>
           <a-input-search
@@ -371,10 +375,11 @@ const categoryShoppingTrendingKeywordsColumns = [
   { key: "rank", dataIndex: "rank", title: "순위", width: "20%" },
   { key: "keyword", dataIndex: "keyword", title: "키워드" },
   {
-    key: "rankDelta",
-    dataIndex: "rankDelta",
+    // key: "rankDelta",
+    // dataIndex: "rankDelta",
     title: "순위변동(지난달 대비)",
     width: "20%",
+    scopedSlots: {customRender: "keywordRankDelta"}
   },
 ];
 
@@ -458,47 +463,7 @@ export default {
       }
       return -1;
     },
-    // DataSources
-    relKeywordStatisticsDataSource() {
-      return this.relKeywordStatistics.keywords?.map((keywordData, index) => {
-        // populate sources
-        const nsearchrel = this.naverSearchRelatedKeywords
-          .map((keyword) => {
-            const replaced = keyword.replace(/ /g, "");
-            return replaced;
-          })
-          .includes(keywordData.relkeyword);
-        const nsearchautocompl = this.naverSearchAutocompleteKeywords
-          .map((keyword) => keyword.replace(/ /g, ""))
-          .includes(keywordData.relKeyword);
-        const nshoppingautocompl = this.naverShoppingAutocompleteKeywords
-          .map((keyword) => keyword.replace(/ /g, ""))
-          .includes(keywordData.relKeyword);
 
-        if (nsearchrel || nsearchautocompl || nshoppingautocompl) {
-          console.log({
-            keyword: keywordData.relKeyword,
-            nsearchrel,
-            nsearchautocompl,
-            nshoppingautocompl,
-          });
-        }
-
-        // console.log(
-        //   this.naverSearchRelatedKeywords.map((keyword) => {
-        //     // const replaced = keyword.replace(/ /g, "");
-        //     // return replaced;
-        //     return keyword
-        //   })
-        // );
-
-        return {
-          key: index,
-          ...keywordData,
-          source: { nsearchrel, nsearchautocompl, nshoppingautocompl },
-        };
-      });
-    },
     // data sources
     ...mapState("keywordStatisticsService", [
       "loading",
@@ -531,6 +496,55 @@ export default {
     ]),
   },
   methods: {
+    getRelKeywordStatisticsDataSource() {
+      return this.relKeywordStatistics.keywords
+        ?.map((keywordData, index) => {
+          // populate sources
+          const nsearchrelkeywords = this.naverSearchRelatedKeywords.map(
+            (keyword) => {
+              const replaced = keyword.replace(/ /g, "");
+              return replaced;
+            }
+          );
+
+          let nsearchrel = false;
+          for (let keyword of nsearchrelkeywords) {
+            if (keyword === keywordData.relKeyword) {
+              nsearchrel = true;
+              break;
+            }
+          }
+
+          const nsearchautocompl = this.naverSearchAutocompleteKeywords
+            .map((keyword) => keyword.replace(/ /g, ""))
+            .includes(keywordData.relKeyword);
+
+          const nshoppingautocompl = this.naverShoppingAutocompleteKeywords
+            .map((keyword) => keyword.replace(/ /g, ""))
+            .includes(keywordData.relKeyword);
+
+          if (nsearchrel || nsearchautocompl || nshoppingautocompl) {
+            console.log({
+              keyword: keywordData.relKeyword,
+              nsearchrel,
+              nsearchautocompl,
+              nshoppingautocompl,
+            });
+          }
+
+          return {
+            key: index,
+            ...keywordData,
+            source: { nsearchrel, nsearchautocompl, nshoppingautocompl },
+          };
+        })
+        .filter(
+          (keywordData) =>
+            keywordData.source.nsearchrel ||
+            keywordData.source.nsearchautocompl ||
+            keywordData.source.nshoppingautocompl
+        );
+    },
     handleSearchNaverShoppingProductsSearch() {
       this.$store.dispatch("naverShoppingProductsService/fetch", this.keyword2);
     },
@@ -641,7 +655,7 @@ export default {
           const lastRank = found?.rank;
           return {
             ...keywordRow,
-            rankDelta: found ? keywordRow.rank - lastRank : "-",
+            rankDelta: found ? keywordRow.rank - lastRank : null,
           };
         });
       } else {

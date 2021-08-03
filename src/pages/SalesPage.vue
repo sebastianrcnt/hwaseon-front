@@ -44,7 +44,6 @@ const naverShoppingProductsColumns = [
   },
   {
     key: "productName",
-    // dataIndex: "productName",
     title: "상품명",
     width: "30%",
     scopedSlots: { customRender: "productName" },

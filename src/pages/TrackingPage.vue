@@ -70,44 +70,15 @@
           >
           <a-button
             @click="
-              store === 'NAVER' ? searchNaver(keyword.keyword) : searchCoupang(keyword.keyword)
+              store === 'NAVER'
+                ? searchNaver(keyword.keyword)
+                : searchCoupang(keyword.keyword)
             "
             >검색결과 보기</a-button
           >
         </span>
       </a-table>
     </a-card>
-    <!-- <a-card>
-      <a-row style="margin-bottom: 16px;">
-        <a-input-group compact>
-          <a-input style="width: 20%" placeholder="스토어명"></a-input>
-          <a-input-search
-            style="width: 30%"
-            placeholder="키워드"
-            enter-button="검색하기"
-          >
-          </a-input-search>
-        </a-input-group>
-      </a-row>
-      <a-row>
-        <a-table> </a-table>
-      </a-row>
-    </a-card>
-    <a-card title="키워드별 예상 판매 (NPay 기준 | 최근 7일간)">
-      <a-row style="margin-bottom: 16px;">
-        <a-input-group compact>
-          <a-input-search
-            style="width: 30%"
-            placeholder="키워드 (ex) 탈모샴푸"
-            enter-button="검색하기"
-          >
-          </a-input-search>
-        </a-input-group>
-      </a-row>
-      <a-row>
-        <a-table> </a-table>
-      </a-row>
-    </a-card> -->
   </MainLayout>
 </template>
 
@@ -133,6 +104,13 @@ const columns = [
     title: "액션",
     scopedSlots: {
       customRender: "actions",
+    },
+  },
+  {
+    key: "adType",
+    title: "광고여부",
+    customRender(text, record) {
+      return record.adType ? "예" : "아니오";
     },
   },
 ];
@@ -166,7 +144,10 @@ export default {
       window.open(`https://www.coupang.com/np/search?q=${keyword}`, "_blank");
     },
     searchNaver(keyword) {
-      window.open(`https://search.shopping.naver.com/search/all?query=${keyword}`, "_blank");
+      window.open(
+        `https://search.shopping.naver.com/search/all?query=${keyword}`,
+        "_blank"
+      );
     },
     async handleSearchClick() {
       this.loading = true;
