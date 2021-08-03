@@ -242,10 +242,14 @@
           :columns="categoryShoppingTrendingKeywordsColumns"
           :data-source="categoryShoppingTrendingKeywords"
         >
-        <span slot="keywordRankDelta" slot-scope="keyword">
-          <a-tag v-if="keyword.rankDelta >= 0" color="green">{{keyword.rankDelta}}</a-tag>
-          <a-tag v-if="keyword.rankDelta < 0" color="red">{{keyword.rankDelta}}</a-tag>
-        </span>
+          <span slot="keywordRankDelta" slot-scope="keyword">
+            <a-tag v-if="keyword.rankDelta >= 0" color="green">{{
+              keyword.rankDelta
+            }}</a-tag>
+            <a-tag v-if="keyword.rankDelta < 0" color="red">{{
+              keyword.rankDelta
+            }}</a-tag>
+          </span>
         </a-table>
       </a-row>
     </a-card>
@@ -379,7 +383,7 @@ const categoryShoppingTrendingKeywordsColumns = [
     // dataIndex: "rankDelta",
     title: "순위변동(지난달 대비)",
     width: "20%",
-    scopedSlots: {customRender: "keywordRankDelta"}
+    scopedSlots: { customRender: "keywordRankDelta" },
   },
 ];
 
@@ -515,21 +519,28 @@ export default {
             }
           }
 
-          const nsearchautocompl = this.naverSearchAutocompleteKeywords
-            .map((keyword) => keyword.replace(/ /g, ""))
-            .includes(keywordData.relKeyword);
+          let nsearchautocompl = false;
+          let nsearchautocomplkeywords = this.naverSearchAutocompleteKeywords.map(
+            (keyword) => keyword.replace(/ /g, "")
+          );
 
-          const nshoppingautocompl = this.naverShoppingAutocompleteKeywords
-            .map((keyword) => keyword.replace(/ /g, ""))
-            .includes(keywordData.relKeyword);
+          for (let keyword of nsearchautocomplkeywords) {
+            if (keyword === keywordData.relKeyword) {
+              nsearchautocompl = true;
+              break;
+            }
+          }
 
-          if (nsearchrel || nsearchautocompl || nshoppingautocompl) {
-            console.log({
-              keyword: keywordData.relKeyword,
-              nsearchrel,
-              nsearchautocompl,
-              nshoppingautocompl,
-            });
+          let nshoppingautocompl = false;
+          const nshoppingautocomplkeywords = this.naverShoppingAutocompleteKeywords.map(
+            (keyword) => keyword.replace(/ /g, "")
+          );
+
+          for (let keyword of nshoppingautocomplkeywords) {
+            if (keyword === keywordData.relKeyword) {
+              nshoppingautocompl = true;
+              break;
+            }
           }
 
           return {
