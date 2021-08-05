@@ -1,7 +1,8 @@
 import axios from "axios";
 export const ApiClient = axios.create({
   // baseURL: process.env.API_URL,
-  baseURL: "http://www.hwaseon2.com:5000",
+  // baseURL: "https://api.hwaseon2.com:5000",
+  baseURL: process.env.VUE_APP_API_URL
 });
 
 const extractData = (res) => res.data;
