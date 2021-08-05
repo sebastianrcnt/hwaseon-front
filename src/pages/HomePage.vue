@@ -1,6 +1,6 @@
 <template>
   <HomeLayout>
-    <h1 class="home-logo">HWASEON</h1>
+    <h1 class="home-logo">SHIWON</h1>
     <div class="search-input-container">
       <a-input-search
         type="text"
