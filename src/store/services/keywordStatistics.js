@@ -2,6 +2,7 @@ import moment from "moment";
 import {
   fetchNaverSearchAutocompleteKeywords,
   fetchNaverSearchRelatedKeywords,
+  fetchNaverShoppingAutocompleteKeywords,
   fetchNaverShoppingProductCount,
   fetchPublishCount,
   fetchRelativeRatio,
@@ -9,6 +10,7 @@ import {
   fetchSearchSectionOrder,
 } from "../../fetchers";
 import { last2Month, lastMonth, today } from "../../utils/time";
+import _ from "underscore";
 
 export const keywordStatisticsService = {
   namespaced: true,
@@ -83,7 +85,7 @@ export const keywordStatisticsService = {
   actions: {
     async search({ dispatch, commit }, keyword) {
       commit("start");
-      keyword = keyword.replace(/ /g, '');
+      keyword = keyword.replace(/ /g, "");
       await dispatch("fetchRelKeywordStatistics", keyword);
       await dispatch("fetchTotalSearchCountRelativeRatio", keyword);
       await dispatch("fetchPublishCount", keyword);
@@ -156,7 +158,7 @@ export const keywordStatisticsService = {
       const naverSearchAutocompleteKeywords = await fetchNaverSearchAutocompleteKeywords(
         keyword
       );
-      const naverShoppingAutocompleteKeywords = await fetchNaverSearchAutocompleteKeywords(
+      const naverShoppingAutocompleteKeywords = await fetchNaverShoppingAutocompleteKeywords(
         keyword
       );
       const naverSearchRelatedKeywords = await fetchNaverSearchRelatedKeywords(

@@ -120,8 +120,8 @@
       <a-row mode="flex">
         <a-col span="6">
           <a-radio-group v-model="chartType" @change="onChartTypeChange">
-            <a-radio-button value="age"> 연령별 </a-radio-button>
             <a-radio-button value="time"> 시간별 </a-radio-button>
+            <a-radio-button value="age"> 연령별 </a-radio-button>
             <a-radio-button value="sex"> 성별 </a-radio-button>
           </a-radio-group>
         </a-col>
@@ -149,16 +149,15 @@
         :data-source="getRelKeywordStatisticsDataSource()"
         :loading="loading"
       >
-        <span slot="keyword" slot-scope="keyword">
-          <a-button
-            v-if="keyword.productCount === undefined"
-            @click="handleRelKeywordProductCountCheckClick(keyword)"
+        <span slot="insightsLink" slot-scope="keywordObj">
+          <a
+            target="_blank"
+            :href="`/#/features/category?keyword=${keywordObj.keyword}`"
           >
-            확인하기
-          </a-button>
-          <a-button v-else>
-            {{ keyword.productCount }}
-          </a-button>
+            <a-button>
+              인사이트 보기
+            </a-button>
+          </a>
         </span>
         <span slot="source" slot-scope="source">
           <a-tag v-if="source.nsearchrel"> 연검 </a-tag>
@@ -300,15 +299,18 @@ import {
   today,
 } from "../utils/time";
 import moment from "moment";
+import _ from "underscore";
 
 // Columns
 // Search Result
+const RelKeywordSources = {
+  nsearchrel: "네이버메인_연관검색어",
+  nsearchautocompl: "네이버메인_자동완성",
+  nshoppingautocompl: "네이버쇼핑_자동완성 ",
+};
+
 const searchResultColumns = [
-  {
-    key: "relKeyword",
-    dataIndex: "relKeyword",
-    title: "키워드",
-  },
+  { key: "keyword", dataIndex: "keyword", title: "키워드" },
   {
     key: "source",
     dataIndex: "source",
@@ -324,56 +326,58 @@ const searchResultColumns = [
       return record.source[value];
     },
   },
+  // {
+  //   key: "monthlyMobileQcCnt",
+  //   dataIndex: "monthlyMobileQcCnt",
+  //   title: "MO 검색량",
+  //   sorter: (a, b) => b.monthlyMobileQcCnt - a.monthlyMobileQcCnt,
+  //   sortDirections: ["ascend", "descend"],
+  // },
+  // {
+  //   key: "monthlyPcQcCnt",
+  //   dataIndex: "monthlyPcQcCnt",
+  //   title: "PC 검색량",
+  //   sorter: (a, b) => b.monthlyPcQcCnt - a.monthlyPcQcCnt,
+  //   sortDirections: ["ascend", "descend"],
+  // },
+  // {
+  //   title: "Total",
+  //   customRender(text, record) {
+  //     return record.monthlyPcQcCnt + record.monthlyMobileQcCnt;
+  //   },
+  //   sorter: (a, b) => b.monthlyPcQcCnt - a.monthlyPcQcCnt,
+  //   sortDirections: ["ascend", "descend"],
+  // },
+  // {
+  //   key: "monthlyAveMobileClkCnt",
+  //   dataIndex: "monthlyAveMobileClkCnt",
+  //   title: "MO 광고클릭",
+  //   sorter: (a, b) => b.monthlyAveMobileClkCnt - a.monthlyAveMobileClkCnt,
+  //   sortDirections: ["ascend", "descend"],
+  //   customRender(text, record) {
+  //     return `${text} (${record.monthlyAveMobileCtr})`;
+  //   },
+  // },
+  // {
+  //   key: "monthlyAvePcClkCnt",
+  //   dataIndex: "monthlyAvePcClkCnt",
+  //   title: "PC 광고클릭",
+  //   sorter: (a, b) => b.monthlyAvePcClkCnt - a.monthlyAvePcClkCnt,
+  //   sortDirections: ["ascend", "descend"],
+  //   customRender(text, record) {
+  //     return `${text} (${record.monthlyAvePcCtr})`;
+  //   },
+  // },
   {
-    key: "monthlyMobileQcCnt",
-    dataIndex: "monthlyMobileQcCnt",
-    title: "MO 검색량",
-    sorter: (a, b) => b.monthlyMobileQcCnt - a.monthlyMobileQcCnt,
-    sortDirections: ["ascend", "descend"],
-  },
-  {
-    key: "monthlyPcQcCnt",
-    dataIndex: "monthlyPcQcCnt",
-    title: "PC 검색량",
-    sorter: (a, b) => b.monthlyPcQcCnt - a.monthlyPcQcCnt,
-    sortDirections: ["ascend", "descend"],
-  },
-  {
-    title: "Total",
-    customRender(text, record) {
-      return record.monthlyPcQcCnt + record.monthlyMobileQcCnt;
-    },
-    sorter: (a, b) => b.monthlyPcQcCnt - a.monthlyPcQcCnt,
-    sortDirections: ["ascend", "descend"],
-  },
-  {
-    key: "monthlyAveMobileClkCnt",
-    dataIndex: "monthlyAveMobileClkCnt",
-    title: "MO 광고클릭",
-    sorter: (a, b) => b.monthlyAveMobileClkCnt - a.monthlyAveMobileClkCnt,
-    sortDirections: ["ascend", "descend"],
-    customRender(text, record) {
-      return `${text} (${record.monthlyAveMobileCtr})`;
-    },
-  },
-  {
-    key: "monthlyAvePcClkCnt",
-    dataIndex: "monthlyAvePcClkCnt",
-    title: "PC 광고클릭",
-    sorter: (a, b) => b.monthlyAvePcClkCnt - a.monthlyAvePcClkCnt,
-    sortDirections: ["ascend", "descend"],
-    customRender(text, record) {
-      return `${text} (${record.monthlyAvePcCtr})`;
-    },
-  },
-  {
-    key: "productCount",
-    title: "상품수",
+    key: "insightsLink",
+    title: "인사이트 링크",
     scopedSlots: {
-      customRender: "keyword",
+      customRender: "insightsLink",
     },
   },
 ];
+
+const removeSpace = (str) => str.replace(/ /g, "");
 
 const categoryShoppingTrendingKeywordsColumns = [
   { key: "rank", dataIndex: "rank", title: "순위", width: "20%" },
@@ -426,7 +430,7 @@ export default {
         responsive: true,
         maintainAspectRatio: false,
       },
-      chartType: "age",
+      chartType: "time",
       chartPeriod: "month",
       // search
       keyword: "",
@@ -501,60 +505,93 @@ export default {
   },
   methods: {
     getRelKeywordStatisticsDataSource() {
-      return this.relKeywordStatistics.keywords
-        ?.map((keywordData, index) => {
-          // populate sources
-          const nsearchrelkeywords = this.naverSearchRelatedKeywords.map(
-            (keyword) => {
-              const replaced = keyword.replace(/ /g, "");
-              return replaced;
-            }
-          );
-
-          let nsearchrel = false;
-          for (let keyword of nsearchrelkeywords) {
-            if (keyword === keywordData.relKeyword) {
-              nsearchrel = true;
-              break;
-            }
-          }
-
-          let nsearchautocompl = false;
-          let nsearchautocomplkeywords = this.naverSearchAutocompleteKeywords.map(
-            (keyword) => keyword.replace(/ /g, "")
-          );
-
-          for (let keyword of nsearchautocomplkeywords) {
-            if (keyword === keywordData.relKeyword) {
-              nsearchautocompl = true;
-              break;
-            }
-          }
-
-          let nshoppingautocompl = false;
-          const nshoppingautocomplkeywords = this.naverShoppingAutocompleteKeywords.map(
-            (keyword) => keyword.replace(/ /g, "")
-          );
-
-          for (let keyword of nshoppingautocomplkeywords) {
-            if (keyword === keywordData.relKeyword) {
-              nshoppingautocompl = true;
-              break;
-            }
-          }
-
+      if (this.relKeywordStatistics.keywords?.length === 0) {
+        return [];
+      } else {
+        const injectSourceProperty = (source) => (keyword) => {
           return {
-            key: index,
-            ...keywordData,
-            source: { nsearchrel, nsearchautocompl, nshoppingautocompl },
+            keyword,
+            source,
           };
-        })
-        .filter(
-          (keywordData) =>
-            keywordData.source.nsearchrel ||
-            keywordData.source.nsearchautocompl ||
-            keywordData.source.nshoppingautocompl
+        };
+        /**  nsearchrel: "네이버메인_연관검색어",
+  nsearchautocompl: "네이버메인_자동완성",
+  nshoppingautocompl: "네이버쇼핑_자동완성 ", */
+        const nsearchrelkeywords = this.naverSearchRelatedKeywords.map(
+          removeSpace
         );
+        const nsearchautocomplkeywords = this.naverSearchAutocompleteKeywords.map(
+          removeSpace
+        );
+        const nshoppingautocomplkeywords = this.naverShoppingAutocompleteKeywords.map(
+          removeSpace
+        );
+        const nsearchrelkeywordsset = new Set(nsearchrelkeywords);
+        const nsearchautocomplkeywordsset = new Set(nsearchautocomplkeywords);
+        const nshoppingautocomplkeywordsset = new Set(
+          nshoppingautocomplkeywords
+        );
+        let keywords = _.union(
+          nsearchrelkeywords,
+          nsearchautocomplkeywords,
+          nshoppingautocomplkeywords
+        ); // string []
+        const constructKeywordObject = (
+          keyword,
+          from_nsearchrel,
+          from_nsearchautocompl,
+          from_nshoppingautocompl
+        ) => {
+          return {
+            keyword,
+            source: {
+              nsearchrel: from_nsearchrel,
+              nsearchautocompl: from_nsearchautocompl,
+              nshoppingautocompl: from_nshoppingautocompl,
+            },
+          };
+        };
+
+        const keywordObjects = keywords.map((keyword) => {
+          const keywordObject = constructKeywordObject(
+            keyword,
+            nsearchrelkeywordsset.has(keyword),
+            nsearchautocomplkeywordsset.has(keyword),
+            nshoppingautocomplkeywordsset.has(keyword)
+          );
+
+          return keywordObject;
+        });
+
+        if (keywordObjects.length > 0)
+          console.log({
+            keywordObjects,
+            nsearchrelkeywords,
+            nsearchautocomplkeywords,
+            nshoppingautocomplkeywords,
+          });
+
+        keywordObjects.sort((x, y) => {
+          let xsourcecount = 0;
+          let ysourcecount = 0;
+          for (let sourceKey in x.source) {
+            if (x.source[sourceKey]) {
+              xsourcecount++;
+            }
+          }
+
+          for (let sourceKey in y.source) {
+            if (y.source[sourceKey]) {
+              ysourcecount++;
+            }
+          }
+
+          return ysourcecount - xsourcecount;
+        });
+
+        return keywordObjects;
+        // return [];
+      }
     },
     handleSearchNaverShoppingProductsSearch() {
       this.$store.dispatch("naverShoppingProductsService/fetch", this.keyword2);
@@ -566,7 +603,9 @@ export default {
           x = this.keywordGraphStatistics["clickTrend"].map(
             (val) => val.period
           );
-          y = this.keywordGraphStatistics["clickTrend"].map((val) => val.value);
+          y = this.keywordGraphStatistics["clickTrend"]
+            .map((val) => val.value)
+            .map((x) => x * this.totalSearchCount);
           break;
         case "age":
           x = this.keywordGraphStatistics["ageRate"].map((val) => val.label);

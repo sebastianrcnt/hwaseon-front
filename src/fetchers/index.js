@@ -2,7 +2,7 @@ import axios from "axios";
 export const ApiClient = axios.create({
   // baseURL: process.env.API_URL,
   // baseURL: "https://api.hwaseon2.com:5000",
-  baseURL: process.env.VUE_APP_API_URL
+  baseURL: process.env.VUE_APP_API_URL,
 });
 
 const extractData = (res) => res.data;
@@ -34,6 +34,11 @@ export const fetchRelativeRatio = (keywords, startDate, endDate) =>
 export const fetchNaverCategory = (categoryId) =>
   ApiClient.get("api/v1/proxy-services/get-search-category", {
     params: { categoryId },
+  }).then(extractData);
+  
+export const fetchNaverSearchRelatedKeywords = (keyword) =>
+  ApiClient.get("/api/v1/keyword-services/naver-search-related", {
+    params: { keyword },
   }).then(extractData);
 
 export const fetchNaverSearchAutocompleteKeywords = (keyword) =>
@@ -97,11 +102,6 @@ export const fetchProductRankWithinKeywordsNaver = (keywords, productUrl) =>
       productUrl,
     }
   ).then(extractData);
-
-export const fetchNaverSearchRelatedKeywords = (keyword) =>
-  ApiClient.get("/api/v1/keyword-services/naver-search-related", {
-    params: { keyword },
-  }).then(extractData);
 
 export const fetchNaverShoppingProductCount = (keyword) =>
   ApiClient.get("/api/v1/keyword-services/naver-shopping-product-count", {
